@@ -78,6 +78,16 @@ public class Main extends JFrame {
         teacherPane.setPreferredSize(Utilities.panelSize);
         classPane.setPreferredSize(Utilities.panelSize);
 
+        //MenuBar
+        JMenuBar bar = new JMenuBar();
+        JMenu menu = new JMenu("EasySchedule");
+        JMenuItem item = new JMenuItem("Einstellungen");
+        item.addActionListener(e -> new Settings());
+        menu.add(item);
+        bar.add(menu);
+        this.setJMenuBar(bar);
+
+
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.pack();
         this.setResizable(false);

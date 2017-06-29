@@ -5,6 +5,7 @@ import java.io.*;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class Utilities implements Serializable {
 
@@ -88,8 +89,20 @@ public class Utilities implements Serializable {
             ArrayList<ArrayList<? extends Main>> objects = ((ArrayList<ArrayList<? extends Main>>) in.readObject());
             teachers = (ArrayList<Lehrer>) objects.get(0);
             classes = ((ArrayList<Klasse>) objects.get(1));
+            in.close();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    static ArrayList<Integer> getTeachesIn(JPanel panel) {
+        return Arrays.stream(panel.getComponents()).map(e -> (JRadioButton)e).filter(JRadioButton::isSelected).
+                map(JRadioButton::getText).map(e -> e.charAt(0) == '1' ? e.substring(0, 2) : e.substring(0, 1)).
+                map(Integer::parseInt).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    static Container addMultiple(Container con, JComponent... components) {
+        Arrays.stream(components).forEach(con::add);
+        return con;
     }
 }
