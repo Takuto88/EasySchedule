@@ -1,6 +1,7 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.*;
 
 public class Main extends JFrame {
 
@@ -10,46 +11,42 @@ public class Main extends JFrame {
         new Main();
     }
 
-    private Main() {
+    public Main() {
         super("Stundenplan");
-        this.setSize(800, 600);
+        Utilities.load();
+        //this.setSize(1000, 700);
         this.setLayout(new BorderLayout());
 
         JPanel topLeftPan = new JPanel(new BorderLayout());
         //{
         JPanel buttonPan1 = new JPanel();
             //{
+        JButton rmTeacher = new JButton("Lehrkraft l\u00f6schen");
         JButton addTeacher = new JButton("Neue Lehrkraft");
+        buttonPan1.add(rmTeacher);
         buttonPan1.add(addTeacher);
             //}
-        JPanel panePan1 = new JPanel();
-            //{
         JList<String> teacherList = new JList<>();
         JScrollPane teacherPane = new JScrollPane(teacherList);
-        teacherPane.setPreferredSize(new Dimension(Utilities.panewidth, Utilities.paneheight));
-        panePan1.add(teacherPane);
-            //}
         //}
         topLeftPan.add(buttonPan1, BorderLayout.NORTH);
-        topLeftPan.add(panePan1, BorderLayout.SOUTH);
+        topLeftPan.add(teacherPane, BorderLayout.CENTER);
 
         JPanel topRightPan = new JPanel(new BorderLayout());
         //{
         JPanel buttonPan2 = new JPanel();
             //{
+        JButton rmClass = new JButton("Klasse l\u00f6schen");
         JButton addClass = new JButton("Neue Klasse");
+        buttonPan2.add(rmClass);
         buttonPan2.add(addClass);
             //}
-        JPanel panePan2 = new JPanel();
-            //{
+
         JList<String> classList = new JList<>();
         JScrollPane classPane = new JScrollPane(classList);
-        classPane.setPreferredSize(new Dimension(Utilities.panewidth, Utilities.paneheight));
-        panePan2.add(classPane);
-            //}
         //}
         topRightPan.add(buttonPan2, BorderLayout.NORTH);
-        topRightPan.add(panePan2, BorderLayout.SOUTH);
+        topRightPan.add(classPane, BorderLayout.CENTER);
 
 
         JPanel bottomPan = new JPanel();
@@ -59,16 +56,47 @@ public class Main extends JFrame {
         bottomPan.setBorder(new EmptyBorder(0, 0, 20, 0));
         //}
 
+
         JPanel mainP = new JPanel();
         mainP.add(topLeftPan);
         mainP.add(topRightPan);
 
-        this.add(mainP, BorderLayout.NORTH);
+        //ActionListener
+        addTeacher.addActionListener(e -> new LehrerGUI(false, null));
+        rmTeacher.addActionListener(delete(teacherList, true));
+
+        addClass.addActionListener(e -> new KlasseGUI(false, null));
+        rmClass.addActionListener(delete(classList, false));
+
+        this.add(mainP, BorderLayout.CENTER);
         this.add(bottomPan, BorderLayout.SOUTH);
 
+        Utilities.setDefault(generate);
+        Utilities.updateList(Utilities.teachers, teacherList);
+        Utilities.updateList(Utilities.classes, classList);
 
+        teacherPane.setPreferredSize(Utilities.panelSize);
+        classPane.setPreferredSize(Utilities.panelSize);
+
+        this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        this.pack();
         this.setResizable(false);
         this.setLocationRelativeTo(null);
         this.setVisible(true);
+
+        this.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                Utilities.save();
+            }
+        });
+    }
+
+    private ActionListener delete(JList<String> list, boolean teacher) {
+        return e -> {
+            int index = list.getSelectedIndex();
+            String name = list.getSelectedValue();
+            if (index != -1) Utilities.alert("M\u00f6chten Sie \"" + name + "\" wirklich l\u00f6schen?",
+                    e2 -> Utilities.teachers.remove(index), (teacher ? "Lehrkraft" : "Klasse") + " l\u00f6schen?");
+        };
     }
 }

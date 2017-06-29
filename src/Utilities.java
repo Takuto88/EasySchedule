@@ -1,23 +1,23 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.io.*;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class Utilities {
+public class Utilities implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    static final int panewidth = 350;
-    static final int paneheight = 450;
+    static final Dimension panelSize = new Dimension(350, 450);
+    private static final String path = System.getProperty("user.home") + "/Desktop/stundenplan.ser";
 
     static ArrayList<Lehrer> teachers = new ArrayList<>();
     static ArrayList<Klasse> classes= new ArrayList<>();
 
-
-    static <T> void updateList(ArrayList<T> data, JList<T> list) {
-        DefaultListModel<T> model = new DefaultListModel<T>();
-        data.forEach(model::addElement);
+    static void updateList(ArrayList<? extends Main> data, JList<String> list) {
+        DefaultListModel<String> model = new DefaultListModel<>();
+        data.forEach(e -> model.addElement(e.toString()));
         list.setModel(model);
     }
 
@@ -28,8 +28,13 @@ public class Utilities {
         JPanel panel2 = new JPanel();
         panel1.add(new JLabel(text));
         JButton button = new JButton("OK");
+        JButton cancel = new JButton("Abbrechen");
+        panel2.add(cancel);
         panel2.add(button);
-        button.addActionListener(listener == null ? e -> frame.dispose() : listener);
+        ActionListener close = e -> frame.dispose();
+        button.addActionListener(listener == null ? close : listener);
+        button.addActionListener(close);
+        cancel.addActionListener(close);
         frame.add(panel1, BorderLayout.NORTH);
         frame.add(panel2, BorderLayout.SOUTH);
         frame.pack();
@@ -59,5 +64,32 @@ public class Utilities {
             if (e instanceof JButton) e.setPreferredSize(new Dimension(120, 30));
             else e.setPreferredSize(new Dimension(150, 20));
         });
+    }
+
+    static void save() {
+        try {
+            if (!new File(path).exists())
+                new File(path).createNewFile();
+            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(path));
+            ArrayList<ArrayList<? extends Main>> objects = new ArrayList<>();
+            objects.add(teachers);
+            objects.add(classes);
+            out.writeObject(objects);
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    static void load() {
+        if (new File(path).exists()) try {
+            ObjectInputStream in = new ObjectInputStream(new FileInputStream(path));
+            ArrayList<ArrayList<? extends Main>> objects = ((ArrayList<ArrayList<? extends Main>>) in.readObject());
+            teachers = (ArrayList<Lehrer>) objects.get(0);
+            classes = ((ArrayList<Klasse>) objects.get(1));
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }
