@@ -1,20 +1,22 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class Main extends JFrame {
 
     private static final long serialVersionUID = 2L;
 
     public static void main(String[] args) {
+        Utilities.isConfigured();
         new Main();
     }
 
     public Main() {
         super("Stundenplan");
         Utilities.load();
-        //this.setSize(1000, 700);
         this.setLayout(new BorderLayout());
 
         JPanel topLeftPan = new JPanel(new BorderLayout());
@@ -26,7 +28,7 @@ public class Main extends JFrame {
         buttonPan1.add(rmTeacher);
         buttonPan1.add(addTeacher);
             //}
-        JList<String> teacherList = new JList<>();
+        JList<String> teacherList = new JList<>(new String[]{"Oertel, Lisa", "Zimmermann, Andreas"});
         JScrollPane teacherPane = new JScrollPane(teacherList);
         //}
         topLeftPan.add(buttonPan1, BorderLayout.NORTH);
@@ -36,13 +38,13 @@ public class Main extends JFrame {
         //{
         JPanel buttonPan2 = new JPanel();
             //{
-        JButton rmClass = new JButton("Klasse l\u00f6schen");
-        JButton addClass = new JButton("Neue Klasse");
+        JButton rmClass = new JButton("Grade l\u00f6schen");
+        JButton addClass = new JButton("Neue Grade");
         buttonPan2.add(rmClass);
         buttonPan2.add(addClass);
             //}
 
-        JList<String> classList = new JList<>();
+        JList<String> classList = new JList<>(new String[]{"5. Grade", "6. Grade", "7. Grade", "8. Grade", "9. Grade", "10. Grade", "11. Grade", "12. Grade"});
         JScrollPane classPane = new JScrollPane(classList);
         //}
         topRightPan.add(buttonPan2, BorderLayout.NORTH);
@@ -62,18 +64,18 @@ public class Main extends JFrame {
         mainP.add(topRightPan);
 
         //ActionListener
-        addTeacher.addActionListener(e -> new LehrerGUI(false, null));
+        addTeacher.addActionListener(e -> new TeacherGUI(false, null));
         rmTeacher.addActionListener(delete(teacherList, true));
 
-        addClass.addActionListener(e -> new KlasseGUI(false, null));
+        addClass.addActionListener(e -> new GradeGUI(false, null));
         rmClass.addActionListener(delete(classList, false));
 
         this.add(mainP, BorderLayout.CENTER);
         this.add(bottomPan, BorderLayout.SOUTH);
 
         Utilities.setDefault(generate);
-        Utilities.updateList(Utilities.teachers, teacherList);
-        Utilities.updateList(Utilities.classes, classList);
+        Utilities.updateList(Utilities.teachers, teacherList, teacherPane);
+        Utilities.updateList(Utilities.classes, classList, classPane);
 
         teacherPane.setPreferredSize(Utilities.panelSize);
         classPane.setPreferredSize(Utilities.panelSize);
@@ -106,7 +108,7 @@ public class Main extends JFrame {
             int index = list.getSelectedIndex();
             String name = list.getSelectedValue();
             if (index != -1) Utilities.alert("M\u00f6chten Sie \"" + name + "\" wirklich l\u00f6schen?",
-                    e2 -> Utilities.teachers.remove(index), (teacher ? "Lehrkraft" : "Klasse") + " l\u00f6schen?");
+                    e2 -> Utilities.teachers.remove(index), (teacher ? "Lehrkraft" : "Grade") + " l\u00f6schen?");
         };
     }
 }

@@ -12,11 +12,12 @@ public class Utilities implements Serializable {
     private static final long serialVersionUID = 1L;
     static final Dimension panelSize = new Dimension(350, 450);
     private static final String path = System.getProperty("user.home") + "/Desktop/stundenplan.ser";
+    private boolean isConfigured = false;
 
-    static ArrayList<Lehrer> teachers = new ArrayList<>();
-    static ArrayList<Klasse> classes= new ArrayList<>();
+    static ArrayList<Teacher> teachers = new ArrayList<>();
+    static ArrayList<Grade> classes= new ArrayList<>();
 
-    static void updateList(ArrayList<? extends Main> data, JList<String> list) {
+    static void updateList(ArrayList<?> data, JList<String> list, JScrollPane pane) {
         DefaultListModel<String> model = new DefaultListModel<>();
         data.forEach(e -> model.addElement(e.toString()));
         list.setModel(model);
@@ -87,8 +88,8 @@ public class Utilities implements Serializable {
         if (new File(path).exists()) try {
             ObjectInputStream in = new ObjectInputStream(new FileInputStream(path));
             ArrayList<ArrayList<? extends Main>> objects = ((ArrayList<ArrayList<? extends Main>>) in.readObject());
-            teachers = (ArrayList<Lehrer>) objects.get(0);
-            classes = ((ArrayList<Klasse>) objects.get(1));
+            teachers = (ArrayList<Teacher>) objects.get(0);
+            classes = ((ArrayList<Grade>) objects.get(1));
             in.close();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -104,5 +105,15 @@ public class Utilities implements Serializable {
     static Container addMultiple(Container con, JComponent... components) {
         Arrays.stream(components).forEach(con::add);
         return con;
+    }
+
+    static JPanel newBoxLayout() {
+        JPanel pan = new JPanel();
+        pan.setLayout(new BoxLayout(pan, BoxLayout.Y_AXIS));
+        return pan;
+    }
+
+    static void isConfigured() {
+
     }
 }
