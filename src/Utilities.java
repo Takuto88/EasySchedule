@@ -116,4 +116,9 @@ public class Utilities implements Serializable {
     static void isConfigured() {
 
     }
+    static String userInput(String frage)
+    {
+        String input = JOptionPane.showInputDialog(frage);
+        return input;
+    }
 }
