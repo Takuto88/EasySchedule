@@ -12,8 +12,8 @@ public class TeacherGUI extends JFrame {
         JTextField lastnameIn = new JTextField();
         JPanel firstnamePan = new JPanel();
         JPanel lastnamePan = new JPanel();
-        Utilities.addMultiple(firstnamePan, new JLabel("Vorname: "), firstnameIn);
-        Utilities.addMultiple(lastnamePan, new JLabel("Nachname: "), lastnameIn);
+        Utilities.add(firstnamePan, new JLabel("Vorname: "), firstnameIn);
+        Utilities.add(lastnamePan, new JLabel("Nachname: "), lastnameIn);
         JPanel namePan = Utilities.newBoxLayout();
 
         //left
@@ -37,7 +37,7 @@ public class TeacherGUI extends JFrame {
         ArrayList<String> subjects = new ArrayList<>();
         JTextField subjectIn = new JTextField();
         JButton addSubject = new JButton("Hinzuf\u00fcgen");
-        Utilities.addMultiple(subjectPan, new JLabel("Neues Fach:"), subjectIn, addSubject);
+        Utilities.add(subjectPan, new JLabel("Neues Fach:"), subjectIn, addSubject);
         addSubject.addActionListener(e -> {
             String text = subjectIn.getText();
             if (text.length() != 0) {
@@ -52,7 +52,7 @@ public class TeacherGUI extends JFrame {
         cancel.addActionListener(e -> this.dispose());
         JButton save = new JButton("Speichern");
         save.addActionListener(e -> save());
-        Utilities.addMultiple(buttonPan, cancel, save);
+        Utilities.add(buttonPan, cancel, save);
 
         //right
         JPanel rightPan = Utilities.newBoxLayout();
@@ -61,9 +61,9 @@ public class TeacherGUI extends JFrame {
 
         Utilities.format(firstnameIn, lastnameIn, subjectIn);
 
-        this.add(Utilities.addMultiple(namePan, firstnamePan, lastnamePan), BorderLayout.NORTH);
-        this.add(Utilities.addMultiple(radioPan, fifth, sixth, seventh, eighth, nineth, tenth, eleventh, twelveth), BorderLayout.WEST);
-        this.add(Utilities.addMultiple(bottomPan, subjectsBox, subjectPan, buttonPan), BorderLayout.SOUTH);
+        this.add(Utilities.add(namePan, firstnamePan, lastnamePan), BorderLayout.NORTH);
+        this.add(Utilities.add(radioPan, fifth, sixth, seventh, eighth, nineth, tenth, eleventh, twelveth), BorderLayout.WEST);
+        this.add(Utilities.add(bottomPan, subjectsBox, subjectPan, buttonPan), BorderLayout.SOUTH);
         Utilities.setDefault(save);
         this.pack();
         this.setLocationRelativeTo(null);

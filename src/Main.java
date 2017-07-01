@@ -10,7 +10,6 @@ public class Main extends JFrame {
     private static final long serialVersionUID = 2L;
 
     public static void main(String[] args) {
-        Utilities.isConfigured();
         new Main();
     }
 
@@ -44,7 +43,7 @@ public class Main extends JFrame {
         buttonPan2.add(addClass);
             //}
 
-        JList<String> classList = new JList<>(new String[]{"5. Grade", "6. Grade", "7. Grade", "8. Grade", "9. Grade", "10. Grade", "11. Grade", "12. Grade"});
+        JList<String> classList = new JList<>(new String[]{"5. Klasse", "6. Klasse", "7. Klasse", "8. Klasse", "9. Klasse", "10. Klasse", "11. Klasse", "12. Klasse"});
         JScrollPane classPane = new JScrollPane(classList);
         //}
         topRightPan.add(buttonPan2, BorderLayout.NORTH);

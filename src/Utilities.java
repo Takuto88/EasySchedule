@@ -1,3 +1,6 @@
+import com.sun.istack.internal.NotNull;
+import com.sun.istack.internal.Nullable;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -15,15 +18,10 @@ public class Utilities implements Serializable {
     static final Dimension panelSize = new Dimension(350, 450);
     private static final String path = System.getProperty("user.home") + "/Desktop/stundenplan.ser";
     static final Font defaultFont = new Font("Roboto", Font.PLAIN, 14);
-    private static final String[] hours = {"06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"};
-    private static final String[] minutes = {"00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10",
-            "11", "12", "13", "14", "15", "16", "17", "18", "19", "20",
-            "21", "22", "23", "24", "25", "26", "27", "28", "29", "30",
-            "31", "32", "33", "34", "35", "36", "37", "38", "39", "40",
-            "41", "42", "43", "44", "45", "46", "47", "48", "49", "50",
-            "51", "52", "53", "54", "55", "56", "57", "58", "59", "60"};
+    static final String[] hours = {"06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"};
+    static final String[] minutes = {"00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"};
     private static HashMap<String, LocalTime> periods = new HashMap<>();
-    private boolean isConfigured = false;
+    static ArrayList<String> subjects = new ArrayList<>();
 
     static ArrayList<Teacher> teachers = new ArrayList<>();
     static ArrayList<Grade> classes= new ArrayList<>();
@@ -34,7 +32,7 @@ public class Utilities implements Serializable {
         list.setModel(model);
     }
 
-    static void alert(String text, ActionListener listener, String title) {
+    static void alert(@NotNull String text, @Nullable ActionListener listener, @Nullable String title) {
         JFrame frame = new JFrame(title == null ? "Error!" : title);
         frame.setLayout(new BorderLayout());
         JPanel panel1 = new JPanel();
@@ -109,7 +107,7 @@ public class Utilities implements Serializable {
                 map(Integer::parseInt).collect(Collectors.toCollection(ArrayList::new));
     }
 
-    static JComponent addMultiple(JComponent con, JComponent... components) {
+    static JComponent add(JComponent con, JComponent... components) {
         Arrays.stream(components).forEach(con::add);
         return con;
     }
@@ -120,24 +118,8 @@ public class Utilities implements Serializable {
         return pan;
     }
 
-    static void isConfigured() {
-
-    }
-
     static String getUserInput(String prompt) {
         return JOptionPane.showInputDialog(prompt, JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    static JComponent[] generateTimes(JFrame frame) {
-        JComponent[] panels = new JComponent[17];
-        for (int i = 0; i < 16; i++)
-            panels[i] = addMultiple(new JPanel(), new JLabel(i + ". Stunde: von "), new JComboBox<>(hours),
-                    new JLabel(":"), new JComboBox<>(minutes), new JLabel(" bis "), new JComboBox<>(hours),
-                    new JLabel(":"), new JComboBox<>(minutes));
-        JButton save = new JButton("Speichern");
-        save.addActionListener(e -> savePeriods());
-        panels[16] = addMultiple(new JPanel(), closeButton(frame, null), save);
-        return panels;
     }
 
     static JButton closeButton(JFrame frame, String text) {
@@ -146,7 +128,7 @@ public class Utilities implements Serializable {
         return b;
     }
 
-    private static void savePeriods() {
+    static void savePeriods(JPanel panel) {
 
     }
 }
