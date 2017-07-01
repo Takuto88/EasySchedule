@@ -15,10 +15,7 @@ public class Settings extends JFrame {
 
 
     }
-    public static void main(String[] args)
-    {
-        new Settings();
-    }
+    
     static JPanel addSubject()
     {
         JPanel addSubject = new JPanel();
