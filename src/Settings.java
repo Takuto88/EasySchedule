@@ -1,4 +1,6 @@
 import javax.swing.*;
+import java.awt.*;
+import java.util.ArrayList;
 
 public class Settings extends JFrame {
     public Settings() {
@@ -11,5 +13,20 @@ public class Settings extends JFrame {
         this.pack();
         this.setLocationRelativeTo(null);
         this.setVisible(true);
+    }
+
+    private JPanel addSubject() {
+        JPanel addSubject = new JPanel();
+        ArrayList<String> subjects = new ArrayList<>();
+        JTextField userinput = new JTextField();
+        userinput.setPreferredSize(new Dimension(100, 20));
+        JButton add = new JButton("Hinzufügen");
+        addSubject.add(userinput);
+        addSubject.add(add);
+        add.addActionListener(e -> {
+            subjects.add(userinput.getText());
+            userinput.setText("");
+        });
+        return addSubject;
     }
 }
