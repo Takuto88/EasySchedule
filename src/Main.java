@@ -38,8 +38,8 @@ public class Main extends JFrame {
         //{
         JPanel buttonPan2 = new JPanel();
             //{
-        JButton rmClass = new JButton("Grade l\u00f6schen");
-        JButton addClass = new JButton("Neue Grade");
+        JButton rmClass = new JButton("Klasse l\u00f6schen");
+        JButton addClass = new JButton("Neue Klasse");
         buttonPan2.add(rmClass);
         buttonPan2.add(addClass);
             //}
@@ -74,8 +74,12 @@ public class Main extends JFrame {
         this.add(bottomPan, BorderLayout.SOUTH);
 
         Utilities.setDefault(generate);
-        Utilities.updateList(Utilities.teachers, teacherList, teacherPane);
-        Utilities.updateList(Utilities.classes, classList, classPane);
+        teacherList.setFont(Utilities.defaultFont);
+        classList.setFont(Utilities.defaultFont);
+        ((DefaultListCellRenderer) teacherList.getCellRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+        ((DefaultListCellRenderer) classList.getCellRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+        //Utilities.updateList(Utilities.teachers, teacherList);
+        //Utilities.updateList(Utilities.classes, classList);
 
         teacherPane.setPreferredSize(Utilities.panelSize);
         classPane.setPreferredSize(Utilities.panelSize);
@@ -88,7 +92,6 @@ public class Main extends JFrame {
         menu.add(item);
         bar.add(menu);
         this.setJMenuBar(bar);
-
 
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.pack();
@@ -108,7 +111,7 @@ public class Main extends JFrame {
             int index = list.getSelectedIndex();
             String name = list.getSelectedValue();
             if (index != -1) Utilities.alert("M\u00f6chten Sie \"" + name + "\" wirklich l\u00f6schen?",
-                    e2 -> Utilities.teachers.remove(index), (teacher ? "Lehrkraft" : "Grade") + " l\u00f6schen?");
+                    e2 -> (teacher ? Utilities.teachers : Utilities.classes).remove(index), (teacher ? "Lehrkraft" : "Grade") + " l\u00f6schen?");
         };
     }
 }
