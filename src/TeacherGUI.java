@@ -17,14 +17,14 @@ public class TeacherGUI extends JFrame {
         JPanel namePan = Utilities.newBoxLayout();
 
         //left
-        JRadioButton fifth = new JRadioButton("5. Klasse");
-        JRadioButton sixth = new JRadioButton("6. Klasse");
-        JRadioButton seventh = new JRadioButton("7. Klasse");
-        JRadioButton eighth = new JRadioButton("8. Klasse");
-        JRadioButton nineth = new JRadioButton("9. Klasse");
-        JRadioButton tenth = new JRadioButton("10. Klasse");
-        JRadioButton eleventh = new JRadioButton("11. Klasse");
-        JRadioButton twelveth = new JRadioButton("12. Klasse");
+        JCheckBox fifth = new JCheckBox("5. Klasse");
+        JCheckBox sixth = new JCheckBox("6. Klasse");
+        JCheckBox seventh = new JCheckBox("7. Klasse");
+        JCheckBox eighth = new JCheckBox("8. Klasse");
+        JCheckBox nineth = new JCheckBox("9. Klasse");
+        JCheckBox tenth = new JCheckBox("10. Klasse");
+        JCheckBox eleventh = new JCheckBox("11. Klasse");
+        JCheckBox twelveth = new JCheckBox("12. Klasse");
         JPanel radioPan = Utilities.newBoxLayout();
         radioPan.setBorder(new EmptyBorder(20, 10, 20, 0));
         radioPan.setAlignmentY(Component.CENTER_ALIGNMENT);

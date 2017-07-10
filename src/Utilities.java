@@ -20,6 +20,10 @@ public class Utilities implements Serializable {
     static final Font defaultFont = new Font("Roboto", Font.PLAIN, 14);
     static final String[] hours = {"06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"};
     static final String[] minutes = {"00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"};
+    static final String[] weekdays = {"Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"};
+    static final String[] periodsList = {"1. Stunde", "2. Stunde","3. Stunde", "4. Stunde",
+            "5. Stunde", "6. Stunde", "7. Stunde", "8. Stunde", "9. Stunde", "10. Stunde",
+            "11. Stunde", "12. Stunde", "13. Stunde", "14. Stunde", "15. Stunde"};
     static HashMap<String, LocalTime> periods = new HashMap<>();
     static ArrayList<String> subjects = new ArrayList<>();
 
@@ -108,8 +112,8 @@ public class Utilities implements Serializable {
     }
 
     static ArrayList<Integer> getTeachesIn(JPanel panel) {
-        return Arrays.stream(panel.getComponents()).map(e -> (JRadioButton)e).filter(JRadioButton::isSelected).
-                map(JRadioButton::getText).map(e -> e.charAt(0) == '1' ? e.substring(0, 2) : e.substring(0, 1)).
+        return Arrays.stream(panel.getComponents()).map(e -> (JCheckBox)e).filter(JCheckBox::isSelected).
+                map(JCheckBox::getText).map(e -> e.charAt(0) == '1' ? e.substring(0, 2) : e.substring(0, 1)).
                 map(Integer::parseInt).collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -157,5 +161,9 @@ public class Utilities implements Serializable {
         if (Integer.toString(time).length() == 1)
             return "0" + time;
         return Integer.toString(time);
+    }
+
+    static <T> void centerList(JList<T> list) {
+        ((DefaultListCellRenderer) list.getCellRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
     }
 }
