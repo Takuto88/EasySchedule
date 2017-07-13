@@ -20,8 +20,13 @@ public class Utilities implements Serializable {
     static final Font defaultFont = new Font("Roboto", Font.PLAIN, 14);
     static final String[] hours = {"06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"};
     static final String[] minutes = {"00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"};
+    static final String[] weekdays = {"-", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"};
+    static final String[] periodsList = {"-", "1. Stunde", "2. Stunde","3. Stunde", "4. Stunde",
+            "5. Stunde", "6. Stunde", "7. Stunde", "8. Stunde", "9. Stunde", "10. Stunde",
+            "11. Stunde", "12. Stunde", "13. Stunde", "14. Stunde", "15. Stunde"};
     static HashMap<String, LocalTime> periods = new HashMap<>();
     static ArrayList<String> subjects = new ArrayList<>();
+    static ArrayList<HashMap<String, String>> wahlpflicht = new ArrayList<>();
 
     static ArrayList<Teacher> teachers = new ArrayList<>();
     static ArrayList<Grade> classes= new ArrayList<>();
@@ -85,6 +90,7 @@ public class Utilities implements Serializable {
             objects.add(classes);
             objects.add(subjects);
             objects.add(mapList);
+            objects.add(wahlpflicht);
             out.writeObject(objects);
             out.close();
         } catch (IOException e) {
@@ -101,8 +107,9 @@ public class Utilities implements Serializable {
             classes = ((ArrayList<Grade>) objects.get(1));
             subjects = ((ArrayList<String>)objects.get(2));
             periods = ((ArrayList<HashMap<String, LocalTime>>)objects.get(3)).get(0);
+            wahlpflicht = ((ArrayList<HashMap<String, String>>)objects.get(4));
             in.close();
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException | ClassNotFoundException | IndexOutOfBoundsException e) {
             e.printStackTrace();
         }
     }
@@ -157,5 +164,43 @@ public class Utilities implements Serializable {
         if (Integer.toString(time).length() == 1)
             return "0" + time;
         return Integer.toString(time);
+    }
+
+    static <T> void centerList(JList<T> list) {
+        ((DefaultListCellRenderer) list.getCellRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+    }
+
+    static boolean readyForNewSubject(JPanel mainPanel) {
+        ArrayList<Component> list = Arrays.stream(mainPanel.getComponents()).collect(Collectors.toCollection(ArrayList::new));
+        JPanel panel = (JPanel)list.get(list.size()-2);
+        ArrayList<String> resultList = Arrays.stream(panel.getComponents()).filter(e -> e instanceof JComboBox).map(e -> (JComboBox<String>)e).
+                map(JComboBox::getSelectedItem).map(Object::toString).filter(e -> !e.equals("-")).
+                collect(Collectors.toCollection(ArrayList::new));
+        return resultList.size() == 1;
+    }
+
+    static HashMap<String, String> getDuration(JPanel panel) {
+        ArrayList<JPanel> componentarray = Arrays.stream(panel.getComponents()).map(e -> (JPanel)e).collect(Collectors.toCollection(ArrayList::new));
+        componentarray.removeAll(componentarray.subList(0, 2));
+        componentarray.remove(componentarray.size()-1);
+        HashMap<String, String> map = new HashMap<>();
+        ArrayList<String> days = new ArrayList<>();
+        ArrayList<String> froms = new ArrayList<>();
+        ArrayList<String> tos = new ArrayList<>();
+        for (JPanel p: componentarray) {
+            ArrayList<JComboBox<String>> list = Arrays.stream(p.getComponents()).filter(e -> e instanceof JComboBox).map(e -> (JComboBox<String>)e).collect(Collectors.toCollection(ArrayList::new));
+            String day = list.get(0).getSelectedItem().toString();
+            String from = list.get(1).getSelectedItem().toString();
+            String to = list.get(2).getSelectedItem().toString();
+            if (!day.equals("-") && !from.equals("-") && !to.equals("-")) {
+                days.add(day);
+                froms.add(from);
+                tos.add(to);
+            }
+        }
+        map.put("days", days.stream().collect(Collectors.joining(", ")));
+        map.put("froms", froms.stream().collect(Collectors.joining(", ")));
+        map.put("tos", tos.stream().collect(Collectors.joining(", ")));
+        return map;
     }
 }

@@ -75,8 +75,8 @@ public class Main extends JFrame {
         Utilities.setDefault(generate);
         teacherList.setFont(Utilities.defaultFont);
         classList.setFont(Utilities.defaultFont);
-        ((DefaultListCellRenderer) teacherList.getCellRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
-        ((DefaultListCellRenderer) classList.getCellRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+        Utilities.centerList(teacherList);
+        Utilities.centerList(classList);
         //Utilities.updateList(Utilities.teachers, teacherList);
         //Utilities.updateList(Utilities.classes, classList);
 
