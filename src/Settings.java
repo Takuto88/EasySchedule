@@ -1,13 +1,10 @@
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
-public class Settings extends JFrame {
-    public Settings() {
+    class Settings extends JFrame {
+    Settings() {
         JTabbedPane tabPane = new JTabbedPane();
         JPanel timeTable = Utilities.newBoxLayout();
         for (int i = 0; i < 16; i++) {
@@ -43,8 +40,7 @@ public class Settings extends JFrame {
         GridBagConstraints c = new GridBagConstraints();
 
         JList<String> subjectList = new JList<>();
-        Utilities.centerList(subjectList);
-        subjectList.setFont(Utilities.defaultFont);
+        Utilities.defaultList(subjectList);
         JScrollPane pane = new JScrollPane(subjectList);
         pane.setPreferredSize(Utilities.panelSize);
         Utilities.updateList(Utilities.subjects, subjectList);
@@ -98,6 +94,20 @@ public class Settings extends JFrame {
         JButton delete = new JButton("Löschen");
         Utilities.add(buttonPan, add, delete);
 
+        JList<String> subjectList = new JList<>();
+        Utilities.defaultList(subjectList);
+        JScrollPane pane = new JScrollPane(subjectList);
+        pane.setPreferredSize(Utilities.panelSize);
+        updateList(subjectList);
+
+        delete.addActionListener(e -> {
+            int index = subjectList.getSelectedIndex();
+            if (index != -1) {
+                Utilities.wahlpflicht.remove(index);
+                updateList(subjectList);
+            }
+        });
+
         add.addActionListener(e -> {
             JFrame frame = new JFrame("Neues Wahlpflichtfach");
             JPanel mainPan = Utilities.newBoxLayout();
@@ -108,19 +118,27 @@ public class Settings extends JFrame {
 
             JComboBox<String> days = new JComboBox<>(Utilities.weekdays);
             days.addActionListener(e2 -> newPanel(mainPan, frame));
+
             JComboBox<String> periodsFrom = new JComboBox<>(Utilities.periodsList);
             periodsFrom.addActionListener(e2 -> newPanel(mainPan, frame));
+
             JComboBox<String> periodsTo = new JComboBox<>(Utilities.periodsList);
             periodsTo.addActionListener(e2 -> newPanel(mainPan, frame));
+
+            periodsFrom.addActionListener(e2 -> enableAdvancedSelection(periodsFrom, periodsTo));
 
             JButton addSubject = new JButton("Hinzufügen");
             addSubject.addActionListener(e2 -> {
                 String grade = gradeSelector.getSelectedItem().toString();
                 String name = field.getText();
                 HashMap<String, String> map = Utilities.getDuration(mainPan);
-                map.put("grade", grade);
-                map.put("name", name);
-                Utilities.wahlpflicht.add(map);
+                if (!map.get("days").equals("") && !map.get("froms").equals("") && !map.get("tos").equals("")) {
+                    map.put("grade", grade);
+                    map.put("name", name);
+                    Utilities.wahlpflicht.add(map);
+                    updateList(subjectList);
+                }
+                frame.dispose();
             });
 
             Utilities.add(mainPan, Utilities.add(new JPanel(), new JLabel("Klassenstufe:"), gradeSelector));
@@ -135,11 +153,6 @@ public class Settings extends JFrame {
             frame.setVisible(true);
         });
 
-        JList<String> subjectList = new JList<>();
-        Utilities.centerList(subjectList);
-        JScrollPane pane = new JScrollPane(subjectList);
-        pane.setPreferredSize(Utilities.panelSize);
-
         wahlpflichtPan.add(pane, BorderLayout.NORTH);
         wahlpflichtPan.add(buttonPan, BorderLayout.CENTER);
 
@@ -152,11 +165,14 @@ public class Settings extends JFrame {
             JComboBox<String> days = new JComboBox<>(Utilities.weekdays);
             days.addActionListener(e2 -> newPanel(panel, frame));
 
+
             JComboBox<String> periodsFrom = new JComboBox<>(Utilities.periodsList);
             periodsFrom.addActionListener(e2 -> newPanel(panel, frame));
 
             JComboBox<String> periodsTo = new JComboBox<>(Utilities.periodsList);
-            periodsTo.addActionListener(e2 -> newPanel(panel, frame));
+            periodsTo.addActionListener(e -> newPanel(panel, frame));
+
+            periodsFrom.addActionListener(e2 -> enableAdvancedSelection(periodsFrom, periodsTo));
 
             components.add(components.size()-1, Utilities.add(new JPanel(), days, new JLabel("von"), periodsFrom, new JLabel("bis"), periodsTo));
             panel.removeAll();
@@ -164,5 +180,33 @@ public class Settings extends JFrame {
             panel.repaint();
             frame.pack();
         }
+    }
+
+    private void updateList(JList<String> list) {
+        DefaultListModel<String> model = new DefaultListModel<>();
+        Utilities.wahlpflicht.sort(Comparator.comparing(e -> e.get("name")));
+        Utilities.wahlpflicht.forEach(e -> {
+            String name = e.get("name");
+            String grade = e.get("grade");
+
+            String[] days = e.get("days").split(", ");
+            String[] from = e.get("froms").split(", ");
+            String[] to = e.get("tos").split(", ");
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; i < days.length; i++)
+                b.append(days[i] + ", " + from[i] + " - " + to[i] + "; ");
+            model.addElement(name + ", " + grade + ".Klasse: " + b.toString());
+        });
+        list.setModel(model);
+    }
+
+    private void enableAdvancedSelection(JComboBox<String> identifier, JComboBox<String> box) {
+        int index = identifier.getSelectedIndex();
+        Object obj = box.getSelectedItem();
+        String[] values = Arrays.copyOfRange(Utilities.periodsList, index, Utilities.periodsList.length);
+        DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
+        Arrays.stream(values).forEach(model::addElement);
+        box.setModel(model);
+        box.setSelectedItem(obj);
     }
 }

@@ -166,8 +166,9 @@ public class Utilities implements Serializable {
         return Integer.toString(time);
     }
 
-    static <T> void centerList(JList<T> list) {
+    static <T> void defaultList(JList<T> list) {
         ((DefaultListCellRenderer) list.getCellRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+        list.setFont(defaultFont);
     }
 
     static boolean readyForNewSubject(JPanel mainPanel) {
@@ -194,6 +195,7 @@ public class Utilities implements Serializable {
             String to = list.get(2).getSelectedItem().toString();
             if (!day.equals("-") && !from.equals("-") && !to.equals("-")) {
                 days.add(day);
+                from = from.replace(" Stunde", "");
                 froms.add(from);
                 tos.add(to);
             }

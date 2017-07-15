@@ -73,10 +73,8 @@ public class Main extends JFrame {
         this.add(bottomPan, BorderLayout.SOUTH);
 
         Utilities.setDefault(generate);
-        teacherList.setFont(Utilities.defaultFont);
-        classList.setFont(Utilities.defaultFont);
-        Utilities.centerList(teacherList);
-        Utilities.centerList(classList);
+        Utilities.defaultList(teacherList);
+        Utilities.defaultList(classList);
         //Utilities.updateList(Utilities.teachers, teacherList);
         //Utilities.updateList(Utilities.classes, classList);
 
