@@ -1,6 +1,3 @@
-import com.sun.istack.internal.NotNull;
-import com.sun.istack.internal.Nullable;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -9,24 +6,36 @@ import java.text.DecimalFormat;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.stream.Collectors;
-
-public class Utilities implements Serializable {
+@SuppressWarnings("unchecked")
+class Utilities implements Serializable {
 
     private static final long serialVersionUID = 1L;
     static final Dimension panelSize = new Dimension(350, 450);
     private static final String path = System.getProperty("user.home") + "/Desktop/stundenplan.ser";
-    static final Font defaultFont = new Font("Roboto", Font.PLAIN, 14);
+    private static final Font defaultFont = new Font("Roboto", Font.PLAIN, 14);
     static final String[] hours = {"06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"};
     static final String[] minutes = {"00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"};
     static final String[] weekdays = {"-", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"};
     static final String[] periodsList = {"-", "1. Stunde", "2. Stunde","3. Stunde", "4. Stunde",
             "5. Stunde", "6. Stunde", "7. Stunde", "8. Stunde", "9. Stunde", "10. Stunde",
             "11. Stunde", "12. Stunde", "13. Stunde", "14. Stunde", "15. Stunde"};
+    static final Comparator<String> numberComparator = (e, k) -> {
+        try {
+            int a = Integer.parseInt(e);
+            int b = Integer.parseInt(k);
+            return a - b;
+        } catch (NumberFormatException x) {
+            return e.compareTo(k);
+        }
+    };
+
     static HashMap<String, LocalTime> periods = new HashMap<>();
     static ArrayList<String> subjects = new ArrayList<>();
     static ArrayList<HashMap<String, String>> wahlpflicht = new ArrayList<>();
+    static ArrayList<String> gradeLevels = new ArrayList<>();
 
     static ArrayList<Teacher> teachers = new ArrayList<>();
     static ArrayList<Grade> classes= new ArrayList<>();
@@ -37,7 +46,7 @@ public class Utilities implements Serializable {
         list.setModel(model);
     }
 
-    static void alert(@NotNull String text, @Nullable ActionListener listener, @Nullable String title) {
+    static void alert(String text, ActionListener listener, String title) {
         JFrame frame = new JFrame(title == null ? "Error!" : title);
         frame.setLayout(new BorderLayout());
         JPanel panel1 = new JPanel();
@@ -91,6 +100,7 @@ public class Utilities implements Serializable {
             objects.add(subjects);
             objects.add(mapList);
             objects.add(wahlpflicht);
+            objects.add(gradeLevels);
             out.writeObject(objects);
             out.close();
         } catch (IOException e) {
@@ -98,7 +108,6 @@ public class Utilities implements Serializable {
         }
     }
 
-    @SuppressWarnings("unchecked")
     static void load() {
         if (new File(path).exists()) try {
             ObjectInputStream in = new ObjectInputStream(new FileInputStream(path));
@@ -108,8 +117,9 @@ public class Utilities implements Serializable {
             subjects = ((ArrayList<String>)objects.get(2));
             periods = ((ArrayList<HashMap<String, LocalTime>>)objects.get(3)).get(0);
             wahlpflicht = ((ArrayList<HashMap<String, String>>)objects.get(4));
+            gradeLevels = ((ArrayList<String>) objects.get(5));
             in.close();
-        } catch (IOException | ClassNotFoundException | IndexOutOfBoundsException e) {
+        } catch (IOException | ClassNotFoundException | IndexOutOfBoundsException | NumberFormatException e) {
             e.printStackTrace();
         }
     }
@@ -140,6 +150,7 @@ public class Utilities implements Serializable {
         b.addActionListener(e -> frame.dispose());
         return b;
     }
+
 
     static void savePeriods(JPanel panel) {
         HashMap<String, LocalTime> map = new HashMap<>();
@@ -175,9 +186,9 @@ public class Utilities implements Serializable {
         ArrayList<Component> list = Arrays.stream(mainPanel.getComponents()).collect(Collectors.toCollection(ArrayList::new));
         JPanel panel = (JPanel)list.get(list.size()-2);
         ArrayList<String> resultList = Arrays.stream(panel.getComponents()).filter(e -> e instanceof JComboBox).map(e -> (JComboBox<String>)e).
-                map(JComboBox::getSelectedItem).map(Object::toString).filter(e -> !e.equals("-")).
+                map(JComboBox::getSelectedItem).map(Object::toString).filter(e -> e.equals("-")).
                 collect(Collectors.toCollection(ArrayList::new));
-        return resultList.size() == 1;
+        return resultList.size() == 0;
     }
 
     static HashMap<String, String> getDuration(JPanel panel) {

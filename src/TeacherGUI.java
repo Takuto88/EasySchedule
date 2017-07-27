@@ -1,10 +1,17 @@
+import oracle.jvm.hotspot.jfr.JFR;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
-public class TeacherGUI extends JFrame {
-    public TeacherGUI(boolean edit, JList<Teacher> list) {
+class TeacherGUI extends JFrame {
+
+    private ArrayList<String> teachesSubjects = new ArrayList<>();
+
+    TeacherGUI(boolean edit, JList<Teacher> list) {
         this.setLayout(new BorderLayout());
 
         //top
@@ -17,36 +24,15 @@ public class TeacherGUI extends JFrame {
         JPanel namePan = Utilities.newBoxLayout();
 
         //left
-        JCheckBox fifth = new JCheckBox("5. Klasse");
-        JCheckBox sixth = new JCheckBox("6. Klasse");
-        JCheckBox seventh = new JCheckBox("7. Klasse");
-        JCheckBox eighth = new JCheckBox("8. Klasse");
-        JCheckBox nineth = new JCheckBox("9. Klasse");
-        JCheckBox tenth = new JCheckBox("10. Klasse");
-        JCheckBox eleventh = new JCheckBox("11. Klasse");
-        JCheckBox twelveth = new JCheckBox("12. Klasse");
-        JPanel radioPan = Utilities.newBoxLayout();
-        radioPan.setBorder(new EmptyBorder(20, 10, 20, 0));
-        radioPan.setAlignmentY(Component.CENTER_ALIGNMENT);
+        JPanel leftPan = Utilities.newBoxLayout();
+        leftPan.setBorder(new EmptyBorder(20, 10, 20, 0));
+        leftPan.setAlignmentY(Component.CENTER_ALIGNMENT);
+        leftPan.add(new JLabel("Unterrichtet in Klassenstufen:"));
+        for (String grade: Utilities.gradeLevels)
+            leftPan.add(new JCheckBox(grade));
 
         //bottom
         JPanel bottomPan = Utilities.newBoxLayout();
-        JComboBox<String> subjectsBox = new JComboBox<>();
-        JPanel subjectPan = new JPanel();
-        subjectPan.setBorder(new EmptyBorder(10, 20, 20, 20));
-        ArrayList<String> subjects = new ArrayList<>();
-        JTextField subjectIn = new JTextField();
-        JButton addSubject = new JButton("Hinzuf\u00fcgen");
-        Utilities.add(subjectPan, new JLabel("Neues Fach:"), subjectIn, addSubject);
-        addSubject.addActionListener(e -> {
-            String text = subjectIn.getText();
-            if (text.length() != 0) {
-                subjects.add(text);
-                subjectsBox.removeAllItems();
-                subjects.forEach(subjectsBox::addItem);
-                subjectIn.setText("");
-            }
-        });
         JPanel buttonPan = new JPanel();
         JButton cancel = new JButton("Abbrechen");
         cancel.addActionListener(e -> this.dispose());
@@ -55,15 +41,28 @@ public class TeacherGUI extends JFrame {
         Utilities.add(buttonPan, cancel, save);
 
         //right
-        JPanel rightPan = Utilities.newBoxLayout();
+        JPanel rightPan = new JPanel(new GridBagLayout());
+        JButton subjectButton = new JButton("Unterrichtsfächer");
+        subjectButton.addActionListener(e -> configureSubjects());
 
+        JButton notAvailableButton = new JButton("Nicht einsetzbar");
+        notAvailableButton.addActionListener(e -> notAvailable());
 
+        JPanel testPan = Utilities.newBoxLayout();
+        GridBagConstraints gbc = new GridBagConstraints();
+        testPan.setAlignmentY(Component.CENTER_ALIGNMENT);
+        subjectButton.setAlignmentY(Component.CENTER_ALIGNMENT);
+        notAvailableButton.setAlignmentY(Component.CENTER_ALIGNMENT);
+        Utilities.add(testPan, subjectButton, notAvailableButton);
 
-        Utilities.format(firstnameIn, lastnameIn, subjectIn);
+        rightPan.add(testPan, gbc);
+
+        Utilities.format(firstnameIn, lastnameIn);
 
         this.add(Utilities.add(namePan, firstnamePan, lastnamePan), BorderLayout.NORTH);
-        this.add(Utilities.add(radioPan, fifth, sixth, seventh, eighth, nineth, tenth, eleventh, twelveth), BorderLayout.WEST);
-        this.add(Utilities.add(bottomPan, subjectsBox, subjectPan, buttonPan), BorderLayout.SOUTH);
+        this.add(leftPan, BorderLayout.WEST);
+        this.add(Utilities.add(bottomPan, buttonPan), BorderLayout.SOUTH);
+        this.add(rightPan, BorderLayout.EAST);
         Utilities.setDefault(save);
         this.pack();
         this.setLocationRelativeTo(null);
@@ -72,5 +71,34 @@ public class TeacherGUI extends JFrame {
 
     private void save() {
 
+    }
+
+    private void configureSubjects() {
+        JFrame frame = new JFrame("Unterrichtsfächer");
+        frame.setLayout(new BorderLayout());
+        JPanel boxPanel = Utilities.newBoxLayout();
+        for (String subject: Utilities.subjects) {
+            JCheckBox box = new JCheckBox(subject);
+            if (Utilities.isInList(subject, teachesSubjects))
+                box.setSelected(true);
+            boxPanel.add(box);
+        }
+        frame.add(boxPanel, BorderLayout.CENTER);
+        JButton save = new JButton("Speichern");
+        save.addActionListener(k -> {
+            teachesSubjects = Arrays.stream(boxPanel.getComponents()).map(e -> (JCheckBox)e).filter(JCheckBox::isSelected).
+                    map(JCheckBox::getText).collect(Collectors.toCollection(ArrayList::new));
+            frame.dispose();
+        });
+        frame.add(Utilities.add(new JPanel(), Utilities.closeButton(frame, "Abbrechen"), save), BorderLayout.SOUTH);
+        Utilities.setDefault(save);
+        frame.setResizable(false);
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+
+    private void notAvailable() {
+        JFrame frame = new JFrame("Lehrkraft nicht einsetzbar");
     }
 }

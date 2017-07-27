@@ -108,7 +108,7 @@ public class Main extends JFrame {
             int index = list.getSelectedIndex();
             String name = list.getSelectedValue();
             if (index != -1) Utilities.alert("M\u00f6chten Sie \"" + name + "\" wirklich l\u00f6schen?",
-                    e2 -> (teacher ? Utilities.teachers : Utilities.classes).remove(index), (teacher ? "Lehrkraft" : "Grade") + " l\u00f6schen?");
+                    e2 -> (teacher ? Utilities.teachers : Utilities.classes).remove(index), (teacher ? "Lehrkraft" : "Klasse") + " l\u00f6schen?");
         };
     }
 }
