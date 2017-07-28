@@ -258,7 +258,6 @@ import java.util.stream.Collectors;
         return subjectPan;
     }
 
-    //Fix messages
     private void addListener(JList<String> subjectList, JTextField subjectIn, ArrayList<String> data, boolean isSubject) {
         if (Utilities.isInList(subjectIn.getText(), data))
             Utilities.alert((isSubject ? "Dieses Unterrichtsfach" : "Diese Klassenstufe") + " ist schon vorhanden.", null, null);
