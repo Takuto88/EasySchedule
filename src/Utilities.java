@@ -4,10 +4,7 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.text.DecimalFormat;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.*;
 import java.util.stream.Collectors;
 @SuppressWarnings("unchecked")
 class Utilities implements Serializable {
@@ -32,7 +29,7 @@ class Utilities implements Serializable {
         }
     };
 
-    static HashMap<String, LocalTime> periods = new HashMap<>();
+    static ArrayList<Period> periods = new ArrayList<>();
     static ArrayList<String> subjects = new ArrayList<>();
     static ArrayList<HashMap<String, String>> wahlpflicht = new ArrayList<>();
     static ArrayList<String> gradeLevels = new ArrayList<>();
@@ -94,11 +91,10 @@ class Utilities implements Serializable {
                 new File(path).createNewFile();
             ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(path));
             ArrayList<ArrayList> objects = new ArrayList<>();
-            ArrayList<HashMap<String, LocalTime>> mapList = new ArrayList<HashMap<String, LocalTime>>() {{add(periods);}};
             objects.add(teachers);
             objects.add(classes);
             objects.add(subjects);
-            objects.add(mapList);
+            objects.add(periods);
             objects.add(wahlpflicht);
             objects.add(gradeLevels);
             out.writeObject(objects);
@@ -115,7 +111,7 @@ class Utilities implements Serializable {
             teachers = (ArrayList<Teacher>) objects.get(0);
             classes = ((ArrayList<Grade>) objects.get(1));
             subjects = ((ArrayList<String>)objects.get(2));
-            periods = ((ArrayList<HashMap<String, LocalTime>>)objects.get(3)).get(0);
+            periods = ((ArrayList<Period>) objects.get(3));
             wahlpflicht = ((ArrayList<HashMap<String, String>>)objects.get(4));
             gradeLevels = ((ArrayList<String>) objects.get(5));
             in.close();
@@ -153,22 +149,27 @@ class Utilities implements Serializable {
 
 
     static void savePeriods(JPanel panel) {
-        HashMap<String, LocalTime> map = new HashMap<>();
+        //HashMap<String, LocalTime> map = new HashMap<>();
+        ArrayList<Period> list = new ArrayList<>();
         boolean error = false;
-        for (Component e : panel.getComponents()) {
+        Component[] panels = panel.getComponents();
+        panels[panels.length-1] = null;
+        panels = Arrays.stream(panels).filter(Objects::nonNull).toArray(Component[]::new);
+        for (Component e : panels) {
             Component[] c = ((JPanel) e).getComponents();
             String text = ((JLabel) c[0]).getText();
-            text = text.charAt(0) == '1' && text.charAt(1) != '.' ? text.substring(0, 2) : text.substring(0, 1);
+            text = text.split(" ")[0];
+            text = text.substring(text.length()-2);
+            int textAsNumber = Integer.parseInt(text);
             LocalTime begin = LocalTime.parse(((JComboBox<String>) c[1]).getSelectedItem() + ":" + ((JComboBox<String>) c[3]).getSelectedItem());
             LocalTime end = LocalTime.parse(((JComboBox<String>) c[5]).getSelectedItem() + ":" + ((JComboBox<String>) c[7]).getSelectedItem());
             if (begin.isAfter(end)) {
                 alert("Der Stundenanfang kann nicht nach Stundenende liegen.", null, null);
                 error = true;
             }
-            map.put(text + "begin", begin);
-            map.put(text + "end", end);
+            list.add(new Period(textAsNumber, begin, end));
         }
-        if (!error) periods = map;
+        if (!error) periods = list;
     }
 
     static String formatTime(Integer time) {
@@ -215,5 +216,22 @@ class Utilities implements Serializable {
         map.put("froms", froms.stream().collect(Collectors.joining(", ")));
         map.put("tos", tos.stream().collect(Collectors.joining(", ")));
         return map;
+    }
+
+    static String[] getNumberOfPeriods() {
+        String[] array = new String[Utilities.periods.size()/2];
+        for (int i = 0; i < Utilities.periods.size()/2; i++)
+            array[i] = i + ". Stunde";
+        return array;
+    }
+
+    static <T> void enableAdvancedSelection(JComboBox<T> identifier, JComboBox<T> box, T[] data) {
+        int index = identifier.getSelectedIndex();
+        Object obj = box.getSelectedItem();
+        T[] values = Arrays.copyOfRange(data, index, data.length);
+        DefaultComboBoxModel<T> model = new DefaultComboBoxModel<>();
+        Arrays.stream(values).forEach(model::addElement);
+        box.setModel(model);
+        box.setSelectedItem(obj);
     }
 }

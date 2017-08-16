@@ -21,24 +21,24 @@ import java.util.stream.Collectors;
     private JPanel timetableTab() {
         JPanel timeTable = Utilities.newBoxLayout();
         timeTable.setLayout(new BoxLayout(timeTable, BoxLayout.Y_AXIS));
-        if (!Utilities.periods.isEmpty()) {
+        System.out.println();
+        if (!Utilities.periods.isEmpty() && Utilities.periods.size() > 0) {
             for (int i = 0; i < Utilities.periods.size(); i++) {
                 JComboBox<String> beginHours = new JComboBox<>(Utilities.hours);
                 JComboBox<String> beginMinutes = new JComboBox<>(Utilities.minutes);
                 JComboBox<String> endHours = new JComboBox<>(Utilities.hours);
-                endHours.addActionListener(e -> newPeriodPanel(timeTable, this));
                 JComboBox<String> endMinutes = new JComboBox<>(Utilities.minutes);
-                endMinutes.addActionListener(e -> newPeriodPanel(timeTable, this));
                 try {
-                    beginHours.setSelectedItem(Utilities.formatTime(Utilities.periods.get(i + "begin").getHour()));
-                    endHours.setSelectedItem(Utilities.formatTime(Utilities.periods.get(i + "end").getHour()));
-                    beginMinutes.setSelectedItem(Utilities.formatTime(Utilities.periods.get(i + "begin").getMinute()));
-                    endMinutes.setSelectedItem(Utilities.formatTime(Utilities.periods.get(i + "end").getMinute()));
+                    beginHours.setSelectedItem(Utilities.formatTime(Utilities.periods.get(i).getBegin().getHour()));
+                    endHours.setSelectedItem(Utilities.formatTime(Utilities.periods.get(i).getEnd().getHour()));
+                    beginMinutes.setSelectedItem(Utilities.formatTime(Utilities.periods.get(i).getBegin().getMinute()));
+                    endMinutes.setSelectedItem(Utilities.formatTime(Utilities.periods.get(i).getEnd().getMinute()));
                 } catch (NullPointerException e) {
                     beginHours.setSelectedItem(0);
                     endHours.setSelectedItem(0);
                     beginMinutes.setSelectedItem(0);
                     endMinutes.setSelectedItem(0);
+                    System.out.println("NullPointerException at timetable");
                 }
                 timeTable.add(Utilities.add(new JPanel(), new JLabel(i + ". Stunde: von "), beginHours,
                         new JLabel(":"), beginMinutes, new JLabel(" bis "), endHours,
@@ -50,8 +50,7 @@ import java.util.stream.Collectors;
             JComboBox<String> endHours = new JComboBox<>(Utilities.hours);
             JComboBox<String> endMinutes = new JComboBox<>(Utilities.minutes);
 
-            beginHours.addActionListener(e -> enableAdvancedSelection(beginHours, endHours, Utilities.hours));
-            beginMinutes.addActionListener(e -> enableAdvancedSelection(beginMinutes, endMinutes, Utilities.minutes));
+            beginHours.addActionListener(e -> Utilities.enableAdvancedSelection(beginHours, endHours, Utilities.hours));
 
             timeTable.add(Utilities.add(new JPanel(), new JLabel("0. Stunde: von "), beginHours, new JLabel(":"),
                     beginMinutes, new JLabel(" bis "), endHours, new JLabel(":"), endMinutes));
@@ -63,7 +62,7 @@ import java.util.stream.Collectors;
         newPeriod.addActionListener(e -> newPeriodPanel(timeTable, this));
 
         JPanel buttonPan = new JPanel(new BorderLayout());
-        buttonPan.add(Utilities.add(new JPanel(), newPeriod, Utilities.closeButton(this, "Abbrechen"), save), BorderLayout.NORTH);
+        buttonPan.add(Utilities.add(new JPanel(), newPeriod, Utilities.closeButton(this, null), save), BorderLayout.NORTH);
         return (JPanel) Utilities.add(timeTable, buttonPan);
     }
 
@@ -105,7 +104,7 @@ import java.util.stream.Collectors;
             JComboBox<String> periodsTo = new JComboBox<>(Utilities.periodsList);
             periodsTo.addActionListener(e2 -> newPanel(mainPan, frame));
 
-            periodsFrom.addActionListener(e2 -> enableAdvancedSelection(periodsFrom, periodsTo, Utilities.periodsList));
+            periodsFrom.addActionListener(e2 -> Utilities.enableAdvancedSelection(periodsFrom, periodsTo, Utilities.periodsList));
 
             JButton addSubject = new JButton("Hinzufügen");
             addSubject.addActionListener(e2 -> {
@@ -151,7 +150,7 @@ import java.util.stream.Collectors;
             JComboBox<String> periodsTo = new JComboBox<>(Utilities.periodsList);
             periodsTo.addActionListener(e -> newPanel(panel, frame));
 
-            periodsFrom.addActionListener(e2 -> enableAdvancedSelection(periodsFrom, periodsTo, Utilities.periodsList));
+            periodsFrom.addActionListener(e2 -> Utilities.enableAdvancedSelection(periodsFrom, periodsTo, Utilities.periodsList));
 
             components.add(components.size()-1, Utilities.add(new JPanel(), days, new JLabel("von"), periodsFrom, new JLabel("bis"), periodsTo));
             panel.removeAll();
@@ -162,15 +161,13 @@ import java.util.stream.Collectors;
     }
 
     private void newPeriodPanel(JPanel panel, JFrame frame) {
-        System.out.println(true);
         ArrayList<Component> components = Arrays.stream(panel.getComponents()).collect(Collectors.toCollection(ArrayList::new));
         JComboBox<String> beginHours = new JComboBox<>(Utilities.hours);
         JComboBox<String> beginMinutes = new JComboBox<>(Utilities.minutes);
         JComboBox<String> endHours = new JComboBox<>(Utilities.hours);
         JComboBox<String> endMinutes = new JComboBox<>(Utilities.minutes);
 
-        beginHours.addActionListener(e -> enableAdvancedSelection(beginHours, endHours, Utilities.hours));
-        beginMinutes.addActionListener(e -> enableAdvancedSelection(beginMinutes, endMinutes, Utilities.hours));
+        beginHours.addActionListener(e -> Utilities.enableAdvancedSelection(beginHours, endHours, Utilities.hours));
 
         components.add(components.size() - 1, Utilities.add(new JPanel(), new JLabel(components.size()-1 + ". Stunde: von "), beginHours,
                 new JLabel(":"), beginMinutes, new JLabel(" bis "), endHours,
@@ -197,16 +194,6 @@ import java.util.stream.Collectors;
             model.addElement(name + ", " + grade + ".Klasse: " + b.toString());
         });
         list.setModel(model);
-    }
-
-    private <T> void enableAdvancedSelection(JComboBox<T> identifier, JComboBox<T> box, T[] data) {
-        int index = identifier.getSelectedIndex();
-        Object obj = box.getSelectedItem();
-        T[] values = Arrays.copyOfRange(data, index, data.length);
-        DefaultComboBoxModel<T> model = new DefaultComboBoxModel<>();
-        Arrays.stream(values).forEach(model::addElement);
-        box.setModel(model);
-        box.setSelectedItem(obj);
     }
 
     private JPanel subjectGradeLevelPan(ArrayList<String> data, boolean isSubject) {

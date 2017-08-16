@@ -3,13 +3,19 @@ import oracle.jvm.hotspot.jfr.JFR;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 class TeacherGUI extends JFrame {
 
     private ArrayList<String> teachesSubjects = new ArrayList<>();
+    private HashMap<DayOfWeek, LocalTime[]> notAvailable = new HashMap<>();
 
     TeacherGUI(boolean edit, JList<Teacher> list) {
         this.setLayout(new BorderLayout());
@@ -90,7 +96,7 @@ class TeacherGUI extends JFrame {
                     map(JCheckBox::getText).collect(Collectors.toCollection(ArrayList::new));
             frame.dispose();
         });
-        frame.add(Utilities.add(new JPanel(), Utilities.closeButton(frame, "Abbrechen"), save), BorderLayout.SOUTH);
+        frame.add(Utilities.add(new JPanel(), Utilities.closeButton(frame, null), save), BorderLayout.SOUTH);
         Utilities.setDefault(save);
         frame.setResizable(false);
         frame.pack();
@@ -100,5 +106,56 @@ class TeacherGUI extends JFrame {
 
     private void notAvailable() {
         JFrame frame = new JFrame("Lehrkraft nicht einsetzbar");
+        frame.setLayout(new BorderLayout());
+        JTabbedPane tabs = new JTabbedPane();
+        tabs.addTab("Montag", weekdays(frame));
+        tabs.addTab("Dienstag", weekdays(frame));
+        tabs.addTab("Mittwoch", weekdays(frame));
+        tabs.addTab("Donnerstag", weekdays(frame));
+        tabs.addTab("Freitag", weekdays(frame));
+        frame.add(tabs, BorderLayout.NORTH);
+
+        JPanel panel = new JPanel();
+        JButton save = new JButton("Speichern");
+        save.addActionListener(e -> saveNotAvailable(tabs));
+        frame.add(Utilities.add(panel, Utilities.closeButton(frame, null), save), BorderLayout.SOUTH);
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+
+    private JPanel weekdays(JFrame frame) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
+        JComboBox<String> from = new JComboBox<>(Utilities.getNumberOfPeriods());
+        JComboBox<String> to = new JComboBox<>(Utilities.getNumberOfPeriods());
+        from.addActionListener(e -> Utilities.enableAdvancedSelection(from, to, Utilities.getNumberOfPeriods()));
+
+        JButton newRow = new JButton("Neue Reihe");
+        newRow.addActionListener(e -> newRow(panel, frame));
+
+        panel.add(Utilities.add(new JPanel(), from, new JLabel(" bis "), to));
+        panel.add(Utilities.add(new JPanel(), newRow));
+        panel.setBorder(new EmptyBorder(0, 100, 0, 100));
+        return panel;
+    }
+
+    private void newRow(JPanel panel, JFrame frame) {
+        ArrayList<Component> components = Arrays.stream(panel.getComponents()).collect(Collectors.toCollection(ArrayList::new));
+
+        JComboBox<String> from = new JComboBox<>(Utilities.getNumberOfPeriods());
+        JComboBox<String> to = new JComboBox<>(Utilities.getNumberOfPeriods());
+        from.addActionListener(e -> Utilities.enableAdvancedSelection(from, to, Utilities.getNumberOfPeriods()));
+
+        components.add(components.size() - 1, Utilities.add(new JPanel(), from, new JLabel(" bis "), to));
+        panel.removeAll();
+        components.forEach(panel::add);
+        panel.repaint();
+        panel.revalidate();
+        frame.pack();
+    }
+
+    private void saveNotAvailable(JTabbedPane tabs) {
+
     }
 }
