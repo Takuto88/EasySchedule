@@ -3,7 +3,9 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.text.DecimalFormat;
+import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
 @SuppressWarnings("unchecked")
@@ -16,9 +18,7 @@ class Utilities implements Serializable {
     static final String[] hours = {"06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"};
     static final String[] minutes = {"00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"};
     static final String[] weekdays = {"-", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"};
-    static final String[] periodsList = {"-", "1. Stunde", "2. Stunde","3. Stunde", "4. Stunde",
-            "5. Stunde", "6. Stunde", "7. Stunde", "8. Stunde", "9. Stunde", "10. Stunde",
-            "11. Stunde", "12. Stunde", "13. Stunde", "14. Stunde", "15. Stunde"};
+
     static final Comparator<String> numberComparator = (e, k) -> {
         try {
             int a = Integer.parseInt(e);
@@ -31,7 +31,7 @@ class Utilities implements Serializable {
 
     static ArrayList<Period> periods = new ArrayList<>();
     static ArrayList<String> subjects = new ArrayList<>();
-    static ArrayList<HashMap<String, String>> wahlpflicht = new ArrayList<>();
+    static ArrayList<Elective> wahlpflicht = new ArrayList<>();
     static ArrayList<String> gradeLevels = new ArrayList<>();
 
     static ArrayList<Teacher> teachers = new ArrayList<>();
@@ -112,18 +112,12 @@ class Utilities implements Serializable {
             classes = ((ArrayList<Grade>) objects.get(1));
             subjects = ((ArrayList<String>)objects.get(2));
             periods = ((ArrayList<Period>) objects.get(3));
-            wahlpflicht = ((ArrayList<HashMap<String, String>>)objects.get(4));
+            wahlpflicht = ((ArrayList<Elective>)objects.get(4));
             gradeLevels = ((ArrayList<String>) objects.get(5));
             in.close();
         } catch (IOException | ClassNotFoundException | IndexOutOfBoundsException | NumberFormatException e) {
             e.printStackTrace();
         }
-    }
-
-    static ArrayList<Integer> getTeachesIn(JPanel panel) {
-        return Arrays.stream(panel.getComponents()).map(e -> (JRadioButton)e).filter(JRadioButton::isSelected).
-                map(JRadioButton::getText).map(e -> e.charAt(0) == '1' ? e.substring(0, 2) : e.substring(0, 1)).
-                map(Integer::parseInt).collect(Collectors.toCollection(ArrayList::new));
     }
 
     static JComponent add(JComponent con, JComponent... components) {
@@ -137,10 +131,6 @@ class Utilities implements Serializable {
         return pan;
     }
 
-    static String getUserInput(String prompt) {
-        return JOptionPane.showInputDialog(prompt, JOptionPane.INFORMATION_MESSAGE);
-    }
-
     static JButton closeButton(JFrame frame, String text) {
         JButton b = new JButton(text == null ? "Abbrechen" : text);
         b.addActionListener(e -> frame.dispose());
@@ -149,7 +139,6 @@ class Utilities implements Serializable {
 
 
     static void savePeriods(JPanel panel) {
-        //HashMap<String, LocalTime> map = new HashMap<>();
         ArrayList<Period> list = new ArrayList<>();
         boolean error = false;
         Component[] panels = panel.getComponents();
@@ -159,7 +148,7 @@ class Utilities implements Serializable {
             Component[] c = ((JPanel) e).getComponents();
             String text = ((JLabel) c[0]).getText();
             text = text.split(" ")[0];
-            text = text.substring(text.length()-2);
+            text = text.substring(0, text.length()-1);
             int textAsNumber = Integer.parseInt(text);
             LocalTime begin = LocalTime.parse(((JComboBox<String>) c[1]).getSelectedItem() + ":" + ((JComboBox<String>) c[3]).getSelectedItem());
             LocalTime end = LocalTime.parse(((JComboBox<String>) c[5]).getSelectedItem() + ":" + ((JComboBox<String>) c[7]).getSelectedItem());
@@ -192,36 +181,42 @@ class Utilities implements Serializable {
         return resultList.size() == 0;
     }
 
-    static HashMap<String, String> getDuration(JPanel panel) {
+    static Elective getDuration(JComboBox<String> box, JTextField field, JPanel panel) {
         ArrayList<JPanel> componentarray = Arrays.stream(panel.getComponents()).map(e -> (JPanel)e).collect(Collectors.toCollection(ArrayList::new));
         componentarray.removeAll(componentarray.subList(0, 2));
         componentarray.remove(componentarray.size()-1);
-        HashMap<String, String> map = new HashMap<>();
-        ArrayList<String> days = new ArrayList<>();
-        ArrayList<String> froms = new ArrayList<>();
-        ArrayList<String> tos = new ArrayList<>();
-        for (JPanel p: componentarray) {
-            ArrayList<JComboBox<String>> list = Arrays.stream(p.getComponents()).filter(e -> e instanceof JComboBox).map(e -> (JComboBox<String>)e).collect(Collectors.toCollection(ArrayList::new));
-            String day = list.get(0).getSelectedItem().toString();
-            String from = list.get(1).getSelectedItem().toString();
-            String to = list.get(2).getSelectedItem().toString();
-            if (!day.equals("-") && !from.equals("-") && !to.equals("-")) {
-                days.add(day);
-                from = from.replace(" Stunde", "");
-                froms.add(from);
-                tos.add(to);
+
+        DayOfWeek[] days = new DayOfWeek[componentarray.size()];
+        PeriodRange[] ranges = new PeriodRange[componentarray.size()];
+
+        for (int i = 0; i < componentarray.size(); i++) {
+            ArrayList<JComboBox<String>> list = Arrays.stream(componentarray.get(i).
+                    getComponents()).filter(e -> e instanceof JComboBox).map(e -> (JComboBox<String>)e).
+                    collect(Collectors.toCollection(ArrayList::new));
+            if (checkElectives(list)) {
+                DayOfWeek day = dayToNumber(list.get(0).getSelectedItem().toString());
+                String from = list.get(1).getSelectedItem().toString().split(" ")[0];
+                int fromInt = Integer.parseInt(from.substring(0, from.length() - 1));
+                String to = list.get(2).getSelectedItem().toString().split(" ")[0];
+                int toInt = Integer.parseInt(to.substring(0, to.length() - 1));
+                days[i] = day;
+                ranges[i] = new PeriodRange(periods.get(fromInt), periods.get(toInt));
             }
         }
-        map.put("days", days.stream().collect(Collectors.joining(", ")));
-        map.put("froms", froms.stream().collect(Collectors.joining(", ")));
-        map.put("tos", tos.stream().collect(Collectors.joining(", ")));
-        return map;
+        return new Elective(box.getSelectedItem().toString(), field.getText(), days, ranges);
+    }
+
+    private static boolean checkElectives(ArrayList<JComboBox<String>> list) {
+        for(JComboBox<String> combo: list)
+            if (combo.getSelectedItem().toString().equals("-")) return false;
+        return true;
     }
 
     static String[] getNumberOfPeriods() {
-        String[] array = new String[Utilities.periods.size()/2];
-        for (int i = 0; i < Utilities.periods.size()/2; i++)
-            array[i] = i + ". Stunde";
+        String[] array = new String[Utilities.periods.size() + 1];
+        array[0] = "-";
+        for (int i = 0; i < Utilities.periods.size(); i++)
+            array[i + 1] = i + ". Stunde";
         return array;
     }
 
@@ -233,5 +228,16 @@ class Utilities implements Serializable {
         Arrays.stream(values).forEach(model::addElement);
         box.setModel(model);
         box.setSelectedItem(obj);
+    }
+
+    private static DayOfWeek dayToNumber(String day) {
+        switch (day) {
+            case "Montag": return DayOfWeek.MONDAY;
+            case "Dienstag": return DayOfWeek.TUESDAY;
+            case "Mittwoch": return DayOfWeek.WEDNESDAY;
+            case "Donnerstag": return DayOfWeek.THURSDAY;
+            case "Freitag": return DayOfWeek.FRIDAY;
+            default: return DayOfWeek.SUNDAY;
+        }
     }
 }

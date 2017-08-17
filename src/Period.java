@@ -1,7 +1,10 @@
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalTime;
 
-public class Period {
+public class Period implements Serializable {
+
+    private static final long serialVersionUID = 5L;
 
     private int periodNumber;
     private LocalTime begin;

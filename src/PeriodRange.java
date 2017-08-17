@@ -1,6 +1,9 @@
+import java.io.Serializable;
 import java.time.*;
 
-public class PeriodRange {
+public class PeriodRange implements Serializable {
+
+    private static final long serialVersionUID = 6L;
 
     private Period from;
     private Period to;

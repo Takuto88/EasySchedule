@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 class TeacherGUI extends JFrame {
 
     private ArrayList<String> teachesSubjects = new ArrayList<>();
-    private HashMap<DayOfWeek, LocalTime[]> notAvailable = new HashMap<>();
+    private HashMap<DayOfWeek, PeriodRange[]> notAvailable = new HashMap<>();
 
     TeacherGUI(boolean edit, JList<Teacher> list) {
         this.setLayout(new BorderLayout());
@@ -156,6 +156,8 @@ class TeacherGUI extends JFrame {
     }
 
     private void saveNotAvailable(JTabbedPane tabs) {
-
+        for (int i = 0; i < tabs.getTabCount(); i++) {
+            JPanel pan = ((JPanel) tabs.getTabComponentAt(i));
+        }
     }
 }

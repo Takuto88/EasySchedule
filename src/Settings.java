@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.time.DayOfWeek;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -90,7 +91,7 @@ import java.util.stream.Collectors;
         add.addActionListener(e -> {
             JFrame frame = new JFrame("Neues Wahlpflichtfach");
             JPanel mainPan = Utilities.newBoxLayout();
-            JComboBox<Integer> gradeSelector = new JComboBox<>(new Integer[]{5,6,7,8,9,10,11,12});
+            JComboBox<String> gradeSelector = new JComboBox<>(Utilities.gradeLevels.toArray(new String[0]));
 
             JTextField field = new JTextField();
             Utilities.format(field);
@@ -98,23 +99,19 @@ import java.util.stream.Collectors;
             JComboBox<String> days = new JComboBox<>(Utilities.weekdays);
             days.addActionListener(e2 -> newPanel(mainPan, frame));
 
-            JComboBox<String> periodsFrom = new JComboBox<>(Utilities.periodsList);
+            JComboBox<String> periodsFrom = new JComboBox<>(Utilities.getNumberOfPeriods());
             periodsFrom.addActionListener(e2 -> newPanel(mainPan, frame));
 
-            JComboBox<String> periodsTo = new JComboBox<>(Utilities.periodsList);
+            JComboBox<String> periodsTo = new JComboBox<>(Utilities.getNumberOfPeriods());
             periodsTo.addActionListener(e2 -> newPanel(mainPan, frame));
 
-            periodsFrom.addActionListener(e2 -> Utilities.enableAdvancedSelection(periodsFrom, periodsTo, Utilities.periodsList));
+            periodsFrom.addActionListener(e2 -> Utilities.enableAdvancedSelection(periodsFrom, periodsTo, Utilities.getNumberOfPeriods()));
 
             JButton addSubject = new JButton("Hinzufügen");
             addSubject.addActionListener(e2 -> {
-                String grade = gradeSelector.getSelectedItem().toString();
-                String name = field.getText();
-                HashMap<String, String> map = Utilities.getDuration(mainPan);
-                if (!map.get("days").equals("") && !map.get("froms").equals("") && !map.get("tos").equals("")) {
-                    map.put("grade", grade);
-                    map.put("name", name);
-                    Utilities.wahlpflicht.add(map);
+                Elective elective = Utilities.getDuration(gradeSelector, field, mainPan);
+                if (!elective.isIncomplete()) {
+                    Utilities.wahlpflicht.add(elective);
                     updateList(subjectList);
                 }
                 frame.dispose();
@@ -144,13 +141,13 @@ import java.util.stream.Collectors;
             JComboBox<String> days = new JComboBox<>(Utilities.weekdays);
             days.addActionListener(e2 -> newPanel(panel, frame));
 
-            JComboBox<String> periodsFrom = new JComboBox<>(Utilities.periodsList);
+            JComboBox<String> periodsFrom = new JComboBox<>(Utilities.getNumberOfPeriods());
             periodsFrom.addActionListener(e2 -> newPanel(panel, frame));
 
-            JComboBox<String> periodsTo = new JComboBox<>(Utilities.periodsList);
+            JComboBox<String> periodsTo = new JComboBox<>(Utilities.getNumberOfPeriods());
             periodsTo.addActionListener(e -> newPanel(panel, frame));
 
-            periodsFrom.addActionListener(e2 -> Utilities.enableAdvancedSelection(periodsFrom, periodsTo, Utilities.periodsList));
+            periodsFrom.addActionListener(e2 -> Utilities.enableAdvancedSelection(periodsFrom, periodsTo, Utilities.getNumberOfPeriods()));
 
             components.add(components.size()-1, Utilities.add(new JPanel(), days, new JLabel("von"), periodsFrom, new JLabel("bis"), periodsTo));
             panel.removeAll();
@@ -180,19 +177,8 @@ import java.util.stream.Collectors;
 
     private void updateList(JList<String> list) {
         DefaultListModel<String> model = new DefaultListModel<>();
-        Utilities.wahlpflicht.sort(Comparator.comparing(e -> e.get("name")));
-        Utilities.wahlpflicht.forEach(e -> {
-            String name = e.get("name");
-            String grade = e.get("grade");
-
-            String[] days = e.get("days").split(", ");
-            String[] from = e.get("froms").split(", ");
-            String[] to = e.get("tos").split(", ");
-            StringBuilder b = new StringBuilder();
-            for (int i = 0; i < days.length; i++)
-                b.append(days[i]).append(", ").append(from[i]).append(" - ").append(to[i]).append("; ");
-            model.addElement(name + ", " + grade + ".Klasse: " + b.toString());
-        });
+        Utilities.wahlpflicht.sort(Comparator.comparing(Elective::getName));
+        Utilities.wahlpflicht.forEach(e -> model.addElement(e.toString()));
         list.setModel(model);
     }
 
