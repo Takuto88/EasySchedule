@@ -27,11 +27,15 @@ public class GradeComparator implements Comparator<String> {
             return -1;
         }
 
-        // Wenn wir bis hier hin gekommen sind, dann ist die klassenzahl gleich. Jetzt wird der Buchstabe interessant:
-        if (grade1letter > grade2letter) {
-            return 1;
-        } else if(grade1letter < grade2letter) {
-            return -1;
+        // Wenn wir bis hier hin gekommen sind, dann ist die Klassenzahl gleich. Jetzt wird der Buchstabe interessant:
+        char[] grade1array = grade1letter.toCharArray();
+        char[] grade2array = grade2letter.toCharArray();
+        int length = grade1array.length > grade2array.length ? grade2array.length : grade1array.length;
+        for(int i = 0; i < length; i++) {
+            if (grade1array[i] > grade1array[i]) return 1;
+            else if (grade1array[i] > grade1array[i]) return -1;
+
+            if (length == i-1) return 1;
         }
 
         // Wenn wir bis hier hin gekommen sind, dann sind die Buchstaben identisch.
