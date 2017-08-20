@@ -2,33 +2,41 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.time.DayOfWeek;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-    class Settings extends JFrame {
+class Settings extends JFrame {
     Settings() {
         JTabbedPane tabPane = new JTabbedPane();
         tabPane.addTab("Zeitplan", timetableTab());
-        tabPane.addTab("Fächer", subjectGradeLevelPan(Utilities.subjects, true));
+        tabPane.addTab("Fächer", subjectGradeLevelPan(Utilities.subjects, true, Comparator.naturalOrder()));
         tabPane.addTab("Wahlpflicht", wahlpflichtTab());
-        tabPane.addTab("Klassenstufen", subjectGradeLevelPan(Utilities.gradeLevels, false));
+        tabPane.addTab("Klassenstufen", subjectGradeLevelPan(Utilities.gradeLevels, false, Comparator.naturalOrder()));
         this.add(tabPane);
         this.pack();
         this.setLocationRelativeTo(null);
         this.setVisible(true);
+
+        this.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                Utilities.save();
+            }
+        });
     }
 
     private JPanel timetableTab() {
         JPanel timeTable = Utilities.newBoxLayout();
         timeTable.setLayout(new BoxLayout(timeTable, BoxLayout.Y_AXIS));
-        System.out.println();
         if (!Utilities.periods.isEmpty() && Utilities.periods.size() > 0) {
             for (int i = 0; i < Utilities.periods.size(); i++) {
                 JComboBox<String> beginHours = new JComboBox<>(Utilities.hours);
                 JComboBox<String> beginMinutes = new JComboBox<>(Utilities.minutes);
                 JComboBox<String> endHours = new JComboBox<>(Utilities.hours);
                 JComboBox<String> endMinutes = new JComboBox<>(Utilities.minutes);
+                predictPeriodLength(beginHours, beginMinutes, endHours, endMinutes);
                 try {
                     beginHours.setSelectedItem(Utilities.formatTime(Utilities.periods.get(i).getBegin().getHour()));
                     endHours.setSelectedItem(Utilities.formatTime(Utilities.periods.get(i).getEnd().getHour()));
@@ -52,6 +60,7 @@ import java.util.stream.Collectors;
             JComboBox<String> endMinutes = new JComboBox<>(Utilities.minutes);
 
             beginHours.addActionListener(e -> Utilities.enableAdvancedSelection(beginHours, endHours, Utilities.hours));
+            predictPeriodLength(beginHours, beginMinutes, endHours, endMinutes);
 
             timeTable.add(Utilities.add(new JPanel(), new JLabel("0. Stunde: von "), beginHours, new JLabel(":"),
                     beginMinutes, new JLabel(" bis "), endHours, new JLabel(":"), endMinutes));
@@ -74,17 +83,18 @@ import java.util.stream.Collectors;
         JButton delete = new JButton("Löschen");
         Utilities.add(buttonPan, add, delete);
 
-        JList<String> subjectList = new JList<>();
-        Utilities.defaultList(subjectList);
-        JScrollPane pane = new JScrollPane(subjectList);
+        JList<Elective> electiveList = new JList<>();
+        Utilities.defaultList(electiveList);
+        Utilities.enableEdit(electiveList, Utilities.electives, Comparator.comparing(Elective::getName));
+        JScrollPane pane = new JScrollPane(electiveList);
         pane.setPreferredSize(Utilities.panelSize);
-        updateList(subjectList);
+        Utilities.updateList(Utilities.electives, electiveList, Comparator.comparing(Elective::getName));
 
         delete.addActionListener(e -> {
-            int index = subjectList.getSelectedIndex();
+            int index = electiveList.getSelectedIndex();
             if (index != -1) {
-                Utilities.wahlpflicht.remove(index);
-                updateList(subjectList);
+                Utilities.electives.remove(index);
+                Utilities.updateList(Utilities.electives, electiveList, Comparator.comparing(Elective::getName));
             }
         });
 
@@ -99,20 +109,20 @@ import java.util.stream.Collectors;
             JComboBox<String> days = new JComboBox<>(Utilities.weekdays);
             days.addActionListener(e2 -> newPanel(mainPan, frame));
 
-            JComboBox<String> periodsFrom = new JComboBox<>(Utilities.getNumberOfPeriods());
+            JComboBox<Period> periodsFrom = new JComboBox<>(Utilities.getPeriodsArray());
             periodsFrom.addActionListener(e2 -> newPanel(mainPan, frame));
 
-            JComboBox<String> periodsTo = new JComboBox<>(Utilities.getNumberOfPeriods());
+            JComboBox<Period> periodsTo = new JComboBox<>(Utilities.getPeriodsArray());
             periodsTo.addActionListener(e2 -> newPanel(mainPan, frame));
 
-            periodsFrom.addActionListener(e2 -> Utilities.enableAdvancedSelection(periodsFrom, periodsTo, Utilities.getNumberOfPeriods()));
+            periodsFrom.addActionListener(e2 -> Utilities.enableAdvancedSelection(periodsFrom, periodsTo, Utilities.getPeriodsArray()));
 
             JButton addSubject = new JButton("Hinzufügen");
             addSubject.addActionListener(e2 -> {
                 Elective elective = Utilities.getDuration(gradeSelector, field, mainPan);
                 if (!elective.isIncomplete()) {
-                    Utilities.wahlpflicht.add(elective);
-                    updateList(subjectList);
+                    Utilities.electives.add(elective);
+                    Utilities.updateList(Utilities.electives, electiveList, Comparator.comparing(Elective::getName));
                 }
                 frame.dispose();
             });
@@ -141,13 +151,13 @@ import java.util.stream.Collectors;
             JComboBox<String> days = new JComboBox<>(Utilities.weekdays);
             days.addActionListener(e2 -> newPanel(panel, frame));
 
-            JComboBox<String> periodsFrom = new JComboBox<>(Utilities.getNumberOfPeriods());
+            JComboBox<Period> periodsFrom = new JComboBox<>(Utilities.getPeriodsArray());
             periodsFrom.addActionListener(e2 -> newPanel(panel, frame));
 
-            JComboBox<String> periodsTo = new JComboBox<>(Utilities.getNumberOfPeriods());
+            JComboBox<Period> periodsTo = new JComboBox<>(Utilities.getPeriodsArray());
             periodsTo.addActionListener(e -> newPanel(panel, frame));
 
-            periodsFrom.addActionListener(e2 -> Utilities.enableAdvancedSelection(periodsFrom, periodsTo, Utilities.getNumberOfPeriods()));
+            periodsFrom.addActionListener(e2 -> Utilities.enableAdvancedSelection(periodsFrom, periodsTo, Utilities.getPeriodsArray()));
 
             components.add(components.size()-1, Utilities.add(new JPanel(), days, new JLabel("von"), periodsFrom, new JLabel("bis"), periodsTo));
             panel.removeAll();
@@ -165,6 +175,19 @@ import java.util.stream.Collectors;
         JComboBox<String> endMinutes = new JComboBox<>(Utilities.minutes);
 
         beginHours.addActionListener(e -> Utilities.enableAdvancedSelection(beginHours, endHours, Utilities.hours));
+        predictPeriodLength(beginHours, beginMinutes, endHours, endMinutes);
+
+        JPanel lastPan = ((JPanel) components.get(components.size() - 2));
+        JComboBox<String> endHour = ((JComboBox<String>) lastPan.getComponent(5));
+        JComboBox<String> endMinute = ((JComboBox<String>) lastPan.getComponent(7));
+
+        LocalTime newBegin = LocalTime.of(Integer.parseInt(((String) endHour.getSelectedItem())), Integer.parseInt((String) endMinute.getSelectedItem()));
+        LocalTime newEnd = newBegin.plusMinutes(45);
+
+        beginHours.setSelectedItem(Utilities.formatTime(newBegin.getHour()));
+        beginMinutes.setSelectedItem(Utilities.formatTime(newBegin.getMinute()));
+        endHours.setSelectedItem(Utilities.formatTime(newEnd.getHour()));
+        endMinutes.setSelectedItem(Utilities.formatTime(newEnd.getMinute()));
 
         components.add(components.size() - 1, Utilities.add(new JPanel(), new JLabel(components.size()-1 + ". Stunde: von "), beginHours,
                 new JLabel(":"), beginMinutes, new JLabel(" bis "), endHours,
@@ -175,29 +198,23 @@ import java.util.stream.Collectors;
         frame.pack();
     }
 
-    private void updateList(JList<String> list) {
-        DefaultListModel<String> model = new DefaultListModel<>();
-        Utilities.wahlpflicht.sort(Comparator.comparing(Elective::getName));
-        Utilities.wahlpflicht.forEach(e -> model.addElement(e.toString()));
-        list.setModel(model);
-    }
-
-    private JPanel subjectGradeLevelPan(ArrayList<String> data, boolean isSubject) {
+    private JPanel subjectGradeLevelPan(ArrayList<String> data, boolean isSubject, Comparator<String> sortBy) {
         JPanel subjectPan = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
         JList<String> subjectList = new JList<>();
+        Utilities.enableEdit(subjectList, data, sortBy);
         subjectList.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_DELETE || e.getKeyCode() == KeyEvent.VK_BACK_SPACE)
-                    deleteListener(subjectList, data);
+                    deleteListener(subjectList, data, sortBy);
             }
         });
         Utilities.defaultList(subjectList);
         JScrollPane pane = new JScrollPane(subjectList);
         pane.setPreferredSize(Utilities.panelSize);
-        Utilities.updateList(data, subjectList);
+        Utilities.updateList(data, subjectList, sortBy);
 
         JPanel inputPan = new JPanel(new BorderLayout());
         inputPan.setMaximumSize(new Dimension(150, 50));
@@ -205,19 +222,19 @@ import java.util.stream.Collectors;
         subjectIn.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER)
-                    addListener(subjectList, subjectIn, data, isSubject);
+                    addListener(subjectList, subjectIn, data, sortBy, isSubject);
             }
         });
         JButton add = new JButton("Hinzufügen");
         Utilities.format(subjectIn, add);
-        add.addActionListener(e -> addListener(subjectList, subjectIn, data, isSubject));
+        add.addActionListener(e -> addListener(subjectList, subjectIn, data, sortBy, isSubject));
         inputPan.setSize(new Dimension(300, 200));
         inputPan.add(subjectIn, BorderLayout.NORTH);
         inputPan.add(add, BorderLayout.SOUTH);
 
         JButton delete = new JButton("Löschen");
         delete.setAlignmentX(SwingConstants.LEFT);
-        delete.addActionListener(e -> deleteListener(subjectList, data));
+        delete.addActionListener(e -> deleteListener(subjectList, data, sortBy));
         c.gridx = 0;
         c.gridy = 0;
         c.insets = new Insets(5, 10, 5, 10);
@@ -227,30 +244,39 @@ import java.util.stream.Collectors;
         c.gridx = 1;
         c.gridy = 1;
         subjectPan.add(inputPan);
-        data.sort(Utilities.numberComparator);
         return subjectPan;
     }
 
-    private void addListener(JList<String> subjectList, JTextField subjectIn, ArrayList<String> data, boolean isSubject) {
+    private void addListener(JList<String> subjectList, JTextField subjectIn, ArrayList<String> data, Comparator<String> sortBy, boolean isSubject) {
         if (Utilities.isInList(subjectIn.getText(), data))
             Utilities.alert((isSubject ? "Dieses Unterrichtsfach" : "Diese Klassenstufe") + " ist schon vorhanden.", null, null);
         else if (subjectIn.getText().equals(""))
             Utilities.alert("Bitte geben Sie ein Unterrichtsfach ein.",  null, null);
         else {
             data.add(subjectIn.getText());
-            data.sort(Utilities.numberComparator);
-            Utilities.updateList(data, subjectList);
+            Utilities.updateList(data, subjectList, sortBy);
             subjectIn.setText("");
             subjectIn.requestFocus();
         }
     }
 
-    private void deleteListener(JList<String> subjectList, ArrayList<String> data) {
+    private <T> void deleteListener(JList<T> subjectList, ArrayList<T> data, Comparator<T> sortBy) {
         int index = subjectList.getSelectedIndex();
         if (index != -1) {
             data.remove(index);
-            data.sort(Utilities.numberComparator);
-            Utilities.updateList(data, subjectList);
-        } else Utilities.alert("Bitte wähle ein Element aus", null, null);
+            Utilities.updateList(data, subjectList, sortBy);
+        } else Utilities.alert("Bitte wählen Sie ein Element aus", null, null);
+    }
+
+    private void predictPeriodLength(JComboBox<String> beginHours, JComboBox<String> beginMinutes, JComboBox<String> endHours, JComboBox<String> endMinutes) {
+        beginHours.addActionListener(e -> setPredicted(beginHours, beginMinutes, endHours, endMinutes));
+        beginMinutes.addActionListener(e -> setPredicted(beginHours, beginMinutes, endHours, endMinutes));
+    }
+
+    private void setPredicted(JComboBox<String> beginHours, JComboBox<String> beginMinutes, JComboBox<String> endHours, JComboBox<String> endMinutes) {
+        LocalTime begin = LocalTime.of(Integer.parseInt(((String) beginHours.getSelectedItem())), Integer.parseInt((String) beginMinutes.getSelectedItem()));
+        LocalTime end = begin.plusMinutes(45);
+        endHours.setSelectedItem(Utilities.formatTime(end.getHour()));
+        endMinutes.setSelectedItem(Utilities.formatTime(end.getMinute()));
     }
 }

@@ -29,6 +29,10 @@ public class PeriodRange implements Serializable {
         this.to = to;
     }
 
+    public boolean isSinglePeriod() {
+        return from == to;
+    }
+
     public int getDuration() {
         return (int)Duration.between(from.getBegin(), to.getEnd()).toMinutes();
     }

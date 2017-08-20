@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 class TeacherGUI extends JFrame {
 
     private ArrayList<String> teachesSubjects = new ArrayList<>();
-    private HashMap<DayOfWeek, PeriodRange[]> notAvailable = new HashMap<>();
+    private HashMap<DayOfWeek, ArrayList<PeriodRange>> notAvailable = new HashMap<>();
 
     TeacherGUI(boolean edit, JList<Teacher> list) {
         this.setLayout(new BorderLayout());
@@ -108,11 +108,11 @@ class TeacherGUI extends JFrame {
         JFrame frame = new JFrame("Lehrkraft nicht einsetzbar");
         frame.setLayout(new BorderLayout());
         JTabbedPane tabs = new JTabbedPane();
-        tabs.addTab("Montag", weekdays(frame));
-        tabs.addTab("Dienstag", weekdays(frame));
-        tabs.addTab("Mittwoch", weekdays(frame));
-        tabs.addTab("Donnerstag", weekdays(frame));
-        tabs.addTab("Freitag", weekdays(frame));
+        tabs.addTab("Montag", weekdays(frame, DayOfWeek.MONDAY));
+        tabs.addTab("Dienstag", weekdays(frame, DayOfWeek.TUESDAY));
+        tabs.addTab("Mittwoch", weekdays(frame, DayOfWeek.WEDNESDAY));
+        tabs.addTab("Donnerstag", weekdays(frame, DayOfWeek.THURSDAY));
+        tabs.addTab("Freitag", weekdays(frame, DayOfWeek.FRIDAY));
         frame.add(tabs, BorderLayout.NORTH);
 
         JPanel panel = new JPanel();
@@ -124,28 +124,35 @@ class TeacherGUI extends JFrame {
         frame.setVisible(true);
     }
 
-    private JPanel weekdays(JFrame frame) {
+    private JPanel weekdays(JFrame frame, DayOfWeek day) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
-        JComboBox<String> from = new JComboBox<>(Utilities.getNumberOfPeriods());
-        JComboBox<String> to = new JComboBox<>(Utilities.getNumberOfPeriods());
-        from.addActionListener(e -> Utilities.enableAdvancedSelection(from, to, Utilities.getNumberOfPeriods()));
+        JComboBox<Period> from = new JComboBox<>(Utilities.getPeriodsArray());
+        JComboBox<Period> to = new JComboBox<>(Utilities.getPeriodsArray());
+        from.addActionListener(e -> Utilities.enableAdvancedSelection(from, to, Utilities.getPeriodsArray()));
 
         JButton newRow = new JButton("Neue Reihe");
-        newRow.addActionListener(e -> newRow(panel, frame));
+        newRow.addActionListener(e -> newRow(panel, frame, null, null));
 
         panel.add(Utilities.add(new JPanel(), from, new JLabel(" bis "), to));
         panel.add(Utilities.add(new JPanel(), newRow));
+        try {
+            notAvailable.get(day).forEach(r -> newRow(panel, frame, r.getFrom(), r.getTo()));
+        } catch (NullPointerException e) {
+            System.out.println("No presaved data");
+        }
         panel.setBorder(new EmptyBorder(0, 100, 0, 100));
         return panel;
     }
 
-    private void newRow(JPanel panel, JFrame frame) {
+    private void newRow(JPanel panel, JFrame frame, Period begin, Period end) {
         ArrayList<Component> components = Arrays.stream(panel.getComponents()).collect(Collectors.toCollection(ArrayList::new));
 
-        JComboBox<String> from = new JComboBox<>(Utilities.getNumberOfPeriods());
-        JComboBox<String> to = new JComboBox<>(Utilities.getNumberOfPeriods());
-        from.addActionListener(e -> Utilities.enableAdvancedSelection(from, to, Utilities.getNumberOfPeriods()));
+        JComboBox<Period> from = new JComboBox<>(Utilities.getPeriodsArray());
+        if (begin != null) from.setSelectedItem(begin);
+        JComboBox<Period> to = new JComboBox<>(Utilities.getPeriodsArray());
+        if (end != null) to.setSelectedItem(end);
+        from.addActionListener(e -> Utilities.enableAdvancedSelection(from, to, Utilities.getPeriodsArray()));
 
         components.add(components.size() - 1, Utilities.add(new JPanel(), from, new JLabel(" bis "), to));
         panel.removeAll();
@@ -157,7 +164,21 @@ class TeacherGUI extends JFrame {
 
     private void saveNotAvailable(JTabbedPane tabs) {
         for (int i = 0; i < tabs.getTabCount(); i++) {
-            JPanel pan = ((JPanel) tabs.getTabComponentAt(i));
+            DayOfWeek day = DayOfWeek.of(i + 1);
+            JPanel tempPan = ((JPanel) tabs.getTabComponentAt(i));
+            ArrayList<JPanel> panels = Arrays.stream(tempPan.getComponents()).map(e -> (JPanel)e).collect(Collectors.toCollection(ArrayList::new));
+            panels.remove(panels.size()-1);
+            ArrayList<PeriodRange> ranges = new ArrayList<>();
+            for (int j = 0; j < panels.size(); j++) {
+                JComboBox<Period> fromBox = ((JComboBox<Period>) panels.get(i).getComponent(0));
+                JComboBox<Period> toBox = ((JComboBox<Period>) panels.get(i).getComponent(2));
+                Period from = (Period)fromBox.getSelectedItem();
+                Period to = (Period)toBox.getSelectedItem();
+                if (!from.isDefaultPeriod() && !to.isDefaultPeriod())
+                    ranges.add(new PeriodRange(from, to));
+            }
+            notAvailable.clear();
+            notAvailable.put(day, ranges);
         }
     }
 }

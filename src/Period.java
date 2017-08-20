@@ -6,6 +6,8 @@ public class Period implements Serializable {
 
     private static final long serialVersionUID = 5L;
 
+    public static final Period DEFAULT = new Period(-1, LocalTime.MIN, LocalTime.MAX);
+
     private int periodNumber;
     private LocalTime begin;
     private LocalTime end;
@@ -46,5 +48,14 @@ public class Period implements Serializable {
 
     public int getDuration() {
         return (int)Duration.between(begin, end).toMinutes();
+    }
+
+    public boolean isDefaultPeriod() {
+        return periodNumber == -1;
+    }
+
+    @Override
+    public String toString() {
+        return isDefaultPeriod() ? "-" : periodNumber + ". Stunde";
     }
 }

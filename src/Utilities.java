@@ -1,11 +1,12 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.*;
 import java.text.DecimalFormat;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
 @SuppressWarnings("unchecked")
@@ -15,31 +16,33 @@ class Utilities implements Serializable {
     static final Dimension panelSize = new Dimension(350, 450);
     private static final String path = System.getProperty("user.home") + "/Desktop/stundenplan.ser";
     private static final Font defaultFont = new Font("Roboto", Font.PLAIN, 14);
+
     static final String[] hours = {"06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22"};
     static final String[] minutes = {"00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"};
     static final String[] weekdays = {"-", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"};
 
     static final Comparator<String> numberComparator = (e, k) -> {
         try {
-            int a = Integer.parseInt(e);
-            int b = Integer.parseInt(k);
-            return a - b;
+            Integer a = Integer.parseInt(e);
+            Integer b = Integer.parseInt(k);
+            return a.compareTo(b);
         } catch (NumberFormatException x) {
-            return e.compareTo(k);
+            return e.compareToIgnoreCase(k);
         }
     };
 
     static ArrayList<Period> periods = new ArrayList<>();
     static ArrayList<String> subjects = new ArrayList<>();
-    static ArrayList<Elective> wahlpflicht = new ArrayList<>();
+    static ArrayList<Elective> electives = new ArrayList<>();
     static ArrayList<String> gradeLevels = new ArrayList<>();
 
     static ArrayList<Teacher> teachers = new ArrayList<>();
     static ArrayList<Grade> classes= new ArrayList<>();
 
-    static void updateList(ArrayList<?> data, JList<String> list) {
-        DefaultListModel<String> model = new DefaultListModel<>();
-        data.forEach(e -> model.addElement(e.toString()));
+    static <T> void updateList(ArrayList<T> data, JList<T> list, Comparator<T> sortBy) {
+        DefaultListModel<T> model = new DefaultListModel<>();
+        data.sort(sortBy);
+        data.forEach(model::addElement);
         list.setModel(model);
     }
 
@@ -95,7 +98,7 @@ class Utilities implements Serializable {
             objects.add(classes);
             objects.add(subjects);
             objects.add(periods);
-            objects.add(wahlpflicht);
+            objects.add(electives);
             objects.add(gradeLevels);
             out.writeObject(objects);
             out.close();
@@ -112,7 +115,7 @@ class Utilities implements Serializable {
             classes = ((ArrayList<Grade>) objects.get(1));
             subjects = ((ArrayList<String>)objects.get(2));
             periods = ((ArrayList<Period>) objects.get(3));
-            wahlpflicht = ((ArrayList<Elective>)objects.get(4));
+            electives = ((ArrayList<Elective>)objects.get(4));
             gradeLevels = ((ArrayList<String>) objects.get(5));
             in.close();
         } catch (IOException | ClassNotFoundException | IndexOutOfBoundsException | NumberFormatException e) {
@@ -158,7 +161,10 @@ class Utilities implements Serializable {
             }
             list.add(new Period(textAsNumber, begin, end));
         }
-        if (!error) periods = list;
+        if (!error) {
+            periods = list;
+            save();
+        }
     }
 
     static String formatTime(Integer time) {
@@ -170,6 +176,7 @@ class Utilities implements Serializable {
     static <T> void defaultList(JList<T> list) {
         ((DefaultListCellRenderer) list.getCellRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
         list.setFont(defaultFont);
+        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     }
 
     static boolean readyForNewSubject(JPanel mainPanel) {
@@ -186,21 +193,20 @@ class Utilities implements Serializable {
         componentarray.removeAll(componentarray.subList(0, 2));
         componentarray.remove(componentarray.size()-1);
 
-        DayOfWeek[] days = new DayOfWeek[componentarray.size()];
-        PeriodRange[] ranges = new PeriodRange[componentarray.size()];
+        ArrayList<DayOfWeek> days = new ArrayList<>();
+        ArrayList<PeriodRange> ranges = new ArrayList<>();
 
-        for (int i = 0; i < componentarray.size(); i++) {
-            ArrayList<JComboBox<String>> list = Arrays.stream(componentarray.get(i).
-                    getComponents()).filter(e -> e instanceof JComboBox).map(e -> (JComboBox<String>)e).
-                    collect(Collectors.toCollection(ArrayList::new));
+        for (JPanel p: componentarray) {
+            ArrayList<JComboBox<String>> list = Arrays.stream(p.getComponents()).filter(e -> e instanceof JComboBox).
+                    map(e -> (JComboBox<String>)e).collect(Collectors.toCollection(ArrayList::new));
             if (checkElectives(list)) {
                 DayOfWeek day = dayToNumber(list.get(0).getSelectedItem().toString());
                 String from = list.get(1).getSelectedItem().toString().split(" ")[0];
                 int fromInt = Integer.parseInt(from.substring(0, from.length() - 1));
                 String to = list.get(2).getSelectedItem().toString().split(" ")[0];
                 int toInt = Integer.parseInt(to.substring(0, to.length() - 1));
-                days[i] = day;
-                ranges[i] = new PeriodRange(periods.get(fromInt), periods.get(toInt));
+                days.add(day);
+                ranges.add(new PeriodRange(periods.get(fromInt), periods.get(toInt)));
             }
         }
         return new Elective(box.getSelectedItem().toString(), field.getText(), days, ranges);
@@ -210,14 +216,6 @@ class Utilities implements Serializable {
         for(JComboBox<String> combo: list)
             if (combo.getSelectedItem().toString().equals("-")) return false;
         return true;
-    }
-
-    static String[] getNumberOfPeriods() {
-        String[] array = new String[Utilities.periods.size() + 1];
-        array[0] = "-";
-        for (int i = 0; i < Utilities.periods.size(); i++)
-            array[i + 1] = i + ". Stunde";
-        return array;
     }
 
     static <T> void enableAdvancedSelection(JComboBox<T> identifier, JComboBox<T> box, T[] data) {
@@ -239,5 +237,45 @@ class Utilities implements Serializable {
             case "Freitag": return DayOfWeek.FRIDAY;
             default: return DayOfWeek.SUNDAY;
         }
+    }
+
+    static Period[] getPeriodsArray() {
+        ArrayList<Period> newPeriods = new ArrayList<>(periods);
+        newPeriods.add(0, Period.DEFAULT);
+        return newPeriods.toArray(new Period[0]);
+    }
+
+    //Enable edit for JLists
+    static <T> void enableEdit(JList<T> list, ArrayList<T> data, Comparator<T> sortBy) {
+        list.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 || e.isShiftDown()) {
+                    T currentValue = list.getSelectedValue();
+                    JFrame frame = new JFrame("Bearbeiten");
+                    frame.setLayout(new BorderLayout());
+
+                    JTextField field = new JTextField(currentValue.toString());
+
+                    JButton save = new JButton("Speichern");
+                    Utilities.format(field, save);
+
+                    save.addActionListener(s -> {
+                        data.set(list.getSelectedIndex(), (T) field.getText());
+                        updateList(data, list, sortBy);
+                        frame.dispose();
+                    });
+
+                    frame.add(Utilities.add(new JPanel(), field), BorderLayout.NORTH);
+                    frame.add(Utilities.add(new JPanel(), save), BorderLayout.SOUTH);
+
+                    setDefault(save);
+
+                    frame.pack();
+                    frame.setLocationRelativeTo(null);
+                    frame.setResizable(false);
+                    frame.setVisible(true);
+                }
+            }
+        });
     }
 }
