@@ -9,7 +9,7 @@ public class GradeComparator implements Comparator<String> {
         isValid(grade1);
         isValid(grade2);
 
-        // Einfacher fall: Wenn die Strings gleich sind, dann geben wir 0 zurück. Weitere Checks brauchen wir nicht.
+        // Einfacher Fall: Wenn die Strings gleich sind, dann geben wir 0 zurück. Weitere Checks brauchen wir nicht.
         if (grade1.equalsIgnoreCase(grade2)) {
             return 0;
         }
@@ -19,7 +19,7 @@ public class GradeComparator implements Comparator<String> {
         String grade1letter = getGradeLetter(grade1);
         String grade2letter = getGradeLetter(grade2);
 
-        // Die zahl hat priorität. Die vergleichen wir zuerst. Ist eine größer oder kleiner als die andere, ist der
+        // Die Zahl hat Priorität. Die vergleichen wir zuerst. Ist eine größer oder kleiner, als die andere, ist der
         // Buchstabe schlicht egal.
         if (grade1number > grade2number) {
             return 1;
@@ -43,17 +43,17 @@ public class GradeComparator implements Comparator<String> {
     }
 
     /**
-     * Stellt sicher, dass der String auch wirklich etwas ist, dass wir vergleichen können
+     * Stellt sicher, dass der String auch wirklich etwas ist, dass wir vergleichen können.
      *
-     * @param grade Klassen string zum prüfen.
+     * @param grade Klassen-String zum Prüfen.
      */
     private void isValid(String grade) {
         if (grade == null)
             throw new NullPointerException("Klasse ist null.");
 
         /*
-         * Regulärer Ausdruck. Der String muss anfangen (^) mit zahlen zwischen 0-9 ([0-9]), davon können beliebig
-         * viele kommen (*). Der String endet ($) mit einem buchstaben zwischen klein a und groß Z ([a-zA-Z]).
+         * Regulärer Ausdruck. Der String muss anfangen (^) mit Zahlen zwischen 0-9 ([0-9]), davon können beliebig
+         * viele kommen (*). Der String endet ($) mit einem Buchstaben zwischen klein a und groß Z ([a-zA-Z]).
          * Das ? zeigt an, dess der Buchstabe da sein kann, aber nicht muss. "5" soll ja auch gültig sein.
          */
         if (!grade.matches("^[0-9]*[a-zA-Z]*?$"))
@@ -70,7 +70,7 @@ public class GradeComparator implements Comparator<String> {
         int gradeNumber = 0;
 
         /*
-         * Auch hier sind wieder reguläre Ausdrücke am start, aber zusätzlich sogenannte gruppen enthalten.
+         * Auch hier sind wieder reguläre Ausdrücke am Start, aber zusätzlich sogenannte gruppen enthalten.
          * Das sind die Gebilde in runden klammern. Folgendes: ([0-9]*) ist die erste Gruppe und wird die Zahl
          * beeinhalten. Gruppe zwei ([a-zA-Z]?) enthält, sofern vorhanden, den Buchstaben.
          */
@@ -84,9 +84,9 @@ public class GradeComparator implements Comparator<String> {
     }
 
     /**
-     * Holt den buchstaben als "char" raus. Also von z.B. 5c das 'c'
-     * @param grade Die grade als string
-     * @return Den buchstaben. Standart ist '!' wenn keiner gefunden wurde.
+     * Holt den Buchstaben als String raus. Also von z.B. 5c das 'c'
+     * @param grade Die Klasse als String
+     * @return Den Buchstaben. Standard ist '!' wenn keiner gefunden wurde.
      */
     private String getGradeLetter(String grade) {
         String letter = "!"; // Defaultwert, wenn keiner da ist. '!' < 'a' gibt true zurück.
